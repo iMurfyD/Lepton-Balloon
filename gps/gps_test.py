@@ -11,6 +11,8 @@ def read(filename):
     while 1:
         for msg in reader.next():
           print(msg)
+          #parsed = pynmea2.parse(msg)
+          #print(parsed)
 
 
 def read_serial(filename):
