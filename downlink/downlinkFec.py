@@ -7,9 +7,11 @@ import sys
 import struct
 import os
 import time
+import hashlib
 
 # bytes to read/transmit at once
 CHUNKSIZE = 32
+PACKETSIZE = 228
 
 # busy flag pin
 BusyFlag = 4 # Broadcom pin 4
@@ -20,6 +22,9 @@ if len(sys.argv) != 2:
     print("Expected single argument")
     sys.exit()
 
+# extract file name for syntactic clarity
+fileName = sys.argv[1]
+
 # get I2C bus
 bus = smbus.SMBus(1)
 
@@ -29,10 +34,25 @@ ADDRESS = 0x0F
 # open binary file
 try:
     f = open(sys.argv[1],"rb")
-    fileSize = os.path.getsize(sys.argv[1])
+    fileSize = os.path.getsize(fileName)
+    fileHash = hashlib.md5(f.read()).hexdigest()
+    print fileSize
+    print fileHash
 except IOError:
     print("Could not open file")
     sys.exit()
+
+# create control packet
+fileHashL = []
+for i in range(1,32):
+    fileHashL.append(ord(fileHash[i]))
+
+ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
+ctrlPacket.extend(fileHashL)
+print ctrlPacket
+
+# append control packet to beginning of file
+f.write(bytearray(ctrlPacket))
 
 # Pin Setup
 GPIO.setmode(GPIO.BCM)
