@@ -9,7 +9,7 @@ import hashlib
 # bytes to read/transmit at once
 CHUNKSIZE = 32
 PACKETSIZE = 228
-HEADERSIZE = 36
+HEADERSIZE = 37
 
 # check number of arguments
 if len(sys.argv) != 3:
@@ -26,8 +26,8 @@ try:
     of = open(outFile,"wb")
     fileSize = os.path.getsize(inFile)
     header = inf.read(HEADERSIZE)
-    rawData = inf.read()
-    fileHash = hashlib.md5(rawData).hexdigest()
+#    rawData = inf.read()
+#    fileHash = hashlib.md5(rawData).hexdigest()
 #    print (fileSize - HEADERSIZE)
 #    print fileHash
 except IOError:
@@ -36,6 +36,20 @@ except IOError:
 
 # print header for debug purposes
 #print header
+
+# get number of packing zeros
+packNum = ord(header[4])
+packing = list(struct.unpack("b"*packNum,inf.read(packNum)))
+if packing != [0]*packNum:
+    print "Incorrect Packing!"
+    print packing
+    inf.close()
+    of.close()
+    sys.exit()
+
+# get remainder of file
+rawData = inf.read()
+fileHash = hashlib.md5(rawData).hexdigest()
 
 # decode control packet
 packetNum = (ord(header[0]) << 8) | ord(header[1])
@@ -47,9 +61,9 @@ if packetNum != 0:
     sys.exit()
 
 fileSize_control = (ord(header[2]) << 8) | ord(header[3])
-if fileSize_control != fileSize-HEADERSIZE:
+if fileSize_control != fileSize-HEADERSIZE-packNum:
     print "Incorrect File Size!"
-    print (fileSize - HEADERSIZE)
+    print (fileSize - HEADERSIZE - packNum)
     print fileSize_control
     inf.close()
     of.close()
@@ -57,7 +71,7 @@ if fileSize_control != fileSize-HEADERSIZE:
 
 fileHash_control = ""
 for i in range(0,32):
-    fileHash_control += header[i+4]
+    fileHash_control += header[i+5]
 if(fileHash != fileHash_control):
     print "Incorrect Packet Hash!"
     print fileHash

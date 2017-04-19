@@ -9,6 +9,7 @@ import hashlib
 # bytes to read/transmit at once
 CHUNKSIZE = 32
 PACKETSIZE = 228
+HEADERSIZE = 37
 
 # check number of arguments
 if len(sys.argv) != 3:
@@ -32,13 +33,19 @@ except IOError:
     print("Could not open file")
     sys.exit()
 
-# create control packet
+# create file hash
 fileHashL = []
 for i in range(0,32):
     fileHashL.append(ord(fileHash[i]))
 
-ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
+# determine required number of padding bytes
+padNum = PACKETSIZE - ((fileSize+HEADERSIZE) % PACKETSIZE)
+
+# create control packet
+# [packetNum,PacketNum,FileSize,FileSize,padNum,Hash,padding]
+ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF),int(padNum)]
 ctrlPacket.extend(fileHashL)
+ctrlPacket.extend([0]*padNum)
 print ctrlPacket
 
 # append control packet to beginning of file
