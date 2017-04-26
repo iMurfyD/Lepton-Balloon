@@ -8,7 +8,7 @@ import hashlib
 
 # bytes to read/transmit at once
 CHUNKSIZE = 32
-PACKETSIZE = 228
+PACKETSIZE = 224
 HEADERSIZE = 37
 
 # check number of arguments
