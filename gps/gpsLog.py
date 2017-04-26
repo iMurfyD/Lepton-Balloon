@@ -1,3 +1,4 @@
+#!/bin/env python
 import pynmea2
 import serial
 import sys
