@@ -5,6 +5,8 @@ import smbus
 import time
 import sys
 
+convTime = 0.02
+
 # read config file
 try:
     cfgFile = open("ms5637.cfg",'r')
@@ -14,6 +16,10 @@ try:
         elif line[0:9] == "MS5637OSR":
             OSR = line[10:-1]
             OSR = int(OSR)
+        elif line[0:10] == "MS5637Freq":
+            freq = line[11:-1]
+            freq = float(freq)
+
 except IOError:
     print "Could not open config file"
     sys.exit()
@@ -66,6 +72,18 @@ else:
     pressureCmd = 0x40
     tempCmd = 0x50
 
+# check if freq is valid
+if (not 'freq' in locals()):
+    print "no sampling Freqency defined in logfile"
+    print "defaulting to 1 second"
+    delay = 1.0
+else:
+    delay = 1/freq
+# correct for expected conversion time delays and ensure positive delay
+delay = delay - 2*convTime
+if delay < 0:
+    delay = 0
+    
 # Get I2C bus
 bus = smbus.SMBus(1)
 
@@ -106,7 +124,7 @@ while 1:
         # begin pressure conversion using OSR defined in cfg file
         bus.write_byte(0x76, pressureCmd)
 
-        time.sleep(0.5)
+        time.sleep(convTime)
 
         # Read digital pressure value
         # Read data back from 0x00(0), 3 bytes
@@ -118,7 +136,7 @@ while 1:
         # begin temperature conversion using OSR defined in cfg file
         bus.write_byte(0x76, tempCmd)
 
-        time.sleep(0.5)
+        time.sleep(convTime)
 
         # Read digital temperature value
         # Read data back from 0x00(0), 3 bytes
@@ -168,6 +186,8 @@ while 1:
         logFile.close()
         print "Pressure : %.2f mbar" %pressure
         print "Temperature in Celsius : %.2f C" %cTemp
+        time.sleep(delay)
+        
     except KeyboardInterrupt:
         logFile.close()
         sys.exit()
