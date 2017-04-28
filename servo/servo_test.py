@@ -1,6 +1,43 @@
 # Servo Control
+import sys
 import time
 import wiringpi
+
+# read config file
+try:
+    cfgFile = open("servo.cfg",'r')
+    for line in cfgFile:
+        if line[0:10] == "ServoDwell":
+            dwell = line[11:-1]
+            dwell = int(dwell)
+        elif line[0:8] == "ServoMin":
+            servoMax = line[9:-1]
+            servoMax = int(servoMax)
+        elif line[0:8] == "ServoMax":
+            servoMin = line[9:-1]
+            servoMin = int(servoMin)
+
+except IOError:
+    print "Could not open config file"
+    sys.exit()
+
+# close config file
+cfgFile.close()
+
+# check if dwell has been discovered in cfg file
+if (not 'dwell' in locals()):
+    print "Servo dwell not found in cfg file"
+    sys.exit()
+
+# check if dwell has been discovered in cfg file
+if (not 'servoMax' in locals()):
+    print "Servo max angle not found in cfg file"
+    sys.exit()
+
+# check if dwell has been discovered in cfg file
+if (not 'servoMin' in locals()):
+    print "Servo min angle not found in cfg file"
+    sys.exit()
 
 # use 'GPIO naming'
 wiringpi.wiringPiSetupGpio()
@@ -18,14 +55,17 @@ wiringpi.pwmSetRange(2000)
 
 delay_period = 0.01
 
+# send servo to center
 wiringpi.pwmWrite(18,120)
-time.sleep(1)
 
 while True:
-	for pulse in range(100, 200, 1):
-		wiringpi.pwmWrite(18,pulse)
-		time.sleep(delay_period)
-	for pulse in range(200, 100, -1):
-		wiringpi.pwmWrite(18,pulse)
-		time.sleep(delay_period)
+    try:
+        wiringpi.pwmWrite(18,servoMax)
+        time.sleep(dwell)
+        wiringpi.pwmWrite(18,servoMin)
+        time.sleep(dwell)
+    except KeyboardInterrupt:
+        # aparently you can't cleanup gpios. Great.
+        sys.exit()
+
 
