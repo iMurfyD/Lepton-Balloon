@@ -7,3 +7,4 @@ To stop lightdm do: "sudo systemctl set-default multi-user.target"
 To restore lightdm do: "sudo systemctl set-default graphical.target"
 Also aparently getty is UNKILLABLE JOFISDPOSHGPOS
 do "sudo systemctl mask serial-getty@ttyAMA0.service" to pipe it to null.
+ensure user is added to video group "sudo usermod -a -G video <username>"
