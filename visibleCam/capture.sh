@@ -1,3 +1,3 @@
 #!/bin/bash
 
-raspistill -o tempCapture.jpg --timeout 1 --nopreview
+raspistill -o tempCapture.jpg --timeout 1 --nopreview --exposure sports
