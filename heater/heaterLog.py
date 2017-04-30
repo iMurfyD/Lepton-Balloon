@@ -2,6 +2,7 @@
 
 import RPi.GPIO as GPIO
 import time
+import datetime
 import sys
 
 # heater pin
@@ -101,16 +102,24 @@ while 1:
             mslogFile.close()
         except IOError:
             print "Could not open ms5637 log file"
+        # try to open heater logfile for append
+        try:
+            logFile = open(log,'a')
+        except:
+            print "Uh oh..."
+        # write time to logfile
+        data = datetime.datetime.now().time().strftime("%H:%M:%S") + ','
+        logFile.write(data)
         # if temp is less than threashold turn on heater
         if curTemp<minTemp:
-            print "Less"
+            logFile.write("ON\n")
             GPIO.output(HeaterPin, GPIO.HIGH)
             hystOn = 1
         elif (hystOn == 1) and (curTemp<(minTemp+hyst)):
-            print "Hyst"
+            logFile.write("HYST\n")
             GPIO.output(HeaterPin, GPIO.HIGH)
         elif curTemp>(minTemp+hyst):
-            print "More"
+            logFile.write("OFF\n")
             GPIO.output(HeaterPin, GPIO.LOW)
             hystOn = 0
         # delay a bit
