@@ -1,5 +1,14 @@
+#!/usr/bin/env python
+
+import RPi.GPIO as GPIO
 import time
 import sys
+
+# heater pin
+HeaterPin = 4 # broadcom pin 4
+
+# hysterisis tracker
+hystOn = 0
 
 # read config file
 try:
@@ -46,9 +55,9 @@ if (not 'msLog' in locals()):
     print "ms5637 logfile not found in cfg file"
     sys.exit()
 
-# try to open logfile for append
+# try to open ms5637 logfile for read
 try:
-    mslogFile = open(msLog,'a')
+    mslogFile = open(msLog,'r')
 except IOError:
     print "Could not open ms5637 log file"
     sys.exit()
@@ -70,4 +79,44 @@ if (not 'hyst' in locals()):
 if (not 'freq' in locals()):
     print "Heater frequency not found in cfg file"
     sys.exit()
+else:
+    if not freq == 0:
+        delay = 1/freq
 
+# pin setup
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(HeaterPin,GPIO.OUT)
+GPIO.output(HeaterPin,GPIO.LOW)
+
+while 1:
+    try:
+        # try to open ms5637 logfile for read
+        try:
+            mslogFile = open(msLog,'r')
+            # get most recent line from logfile
+            curLine = mslogFile.readline().split(',')
+            # parse line as two floats
+            curTemp = float(curLine[1])
+            # close logfile
+            mslogFile.close()
+        except IOError:
+            print "Could not open ms5637 log file"
+        # if temp is less than threashold turn on heater
+        if curTemp<minTemp:
+            print "Less"
+            GPIO.output(HeaterPin, GPIO.HIGH)
+            hystOn = 1
+        elif (hystOn == 1) and (curTemp<(minTemp+hyst)):
+            print "Hyst"
+            GPIO.output(HeaterPin, GPIO.HIGH)
+        elif curTemp>(minTemp+hyst):
+            print "More"
+            GPIO.output(HeaterPin, GPIO.LOW)
+            hystOn = 0
+        # delay a bit
+        time.sleep(delay)
+
+    except KeyboardInterrupt:
+        GPIO.output(HeaterPin, GPIO.LOW)
+        sys.exit()
+        GPIO.cleanup()
