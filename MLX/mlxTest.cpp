@@ -1,4 +1,4 @@
-#include "mlx90621.cpp"
+#include "mlx90261.h"
 
 // instantiate sensor
 MLX90621 mlx;

@@ -27,7 +27,10 @@ uint8_t MLX90621::init(void) {
   // begin serial interface
   printf("Initializing MLX90621\n");
   // begin wire interface
-  if (!bcm2835_init()) return 0;
+  if (!bcm2835_init()){
+    printf("Failed to initialize I2C Bus\n");
+    return 0;
+  }
   bcm2835_i2c_begin();
   bcm2835_i2c_set_baudrate(400000);
   // POR
@@ -41,6 +44,7 @@ uint8_t MLX90621::init(void) {
   // check for error
   //checkError(_error);
   // read EEPROM table
+  printf("Reading EEPROM...\n");
   readEEPROM(_EEPROM_Data);
   // store calibration constants
   for(i=0;i<64;i++){
@@ -158,15 +162,23 @@ uint16_t MLX90621::readTamb(){
 }
 // read EEPROM
 void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
+  printf("in readEEPROM\n");
   // read EEPROM table
   uint16_t i,j;
   // begin i2c interface
-  bcm2835_i2c_begin();
+  //bcm2835_i2c_begin();
   // write address to begin reading at
+  printf("Setting Slave Address\n");
   bcm2835_i2c_setSlaveAddress(EEPROM_ADDR);
   // recieve bytes and write into recieve buffer
-  bcm2835_i2c_write_read_rs((char *)0x00, 1,(char *)dataBuf, EEPROM_SIZE);
+  printf("Reading Data\n");
+  uint8_t error = bcm2835_i2c_write((char *)0x00,1);
+  printf("%i\n",error);
+  printf("Reading Data\n");
+  bcm2835_i2c_read((char *)dataBuf,EEPROM_SIZE);
+  //bcm2835_i2c_write_read_rs((char *)0x00, 1,(char *)dataBuf, EEPROM_SIZE);
   // output table for debugging
+  printf("EEPROM Contents:\n");
   for(j=0;j<16;j++){
     for(i=0;i<256;i++){
       printf("%X,",dataBuf[16*j+i]);
