@@ -150,11 +150,17 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
 uint16_t MLX90621::readTamb(){
   printf("Reading T_amb\n");
   uint16_t T_amb;
-  uint8_t buf[4];
-  buf[0] = 0x02;
-  buf[1] = 0x40;
-  buf[2] = 0x00;
-  buf[3] = 0x01;
+  // buffers
+  uint8_t inbuf[2];
+  uint8_t outbuf[4];
+  // message structs
+  struct i2c_rdwr_ioctl_data packets;
+  struct i2c_msg messages[2];
+  // construct output message
+  outbuf[0] = 0x02;
+  outbuf[1] = 0x40;
+  outbuf[2] = 0x00;
+  outbuf[3] = 0x01;
   // begin i2c interface
   snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
   int I2C = open(i2cFilename, O_RDWR);
@@ -162,24 +168,30 @@ uint16_t MLX90621::readTamb(){
     printf("Failed to initialize I2C Bus\n");
     return 0;
   }
-  // use MLX address
-  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
-    // could not set device as slave
-    printf("Could not find device\n");
+  // output struct
+  messages[0].addr = MLX_ADDR;
+  messages[0].flags = 0;
+  messages[0].len = sizeof(outbuf);
+  messages[0].buf = outbuf;
+
+  // output struct
+  messages[1].addr = MLX_ADDR;
+  messages[1].flags = I2C_M_RD/* | I2C_M_NOSTARTi*/;
+  messages[1].len = sizeof(inbuf);
+  messages[1].buf = inbuf;
+
+  // send request to kernel
+  packets.msgs = messages;
+  packets.nmsgs = 2;
+  if(ioctl(I2C, I2C_RDWR, &packets) < 0){
+    // unable to send data
+    printf("Unable to send data\n");
+    return 0;
   }
-  // write command to read ambient temp
-  if (write(I2C, buf, 4) != 4){
-    // write failed
-    printf("Write Failed\n");
-  }
-  // request two data bytes
-  if (read(I2C, buf, 2) != 2){
-    // read failed
-    printf("Read Failed\n");
-  }
+
   // LSB first
-  T_amb = buf[0];
-  T_amb = T_amb | (buf[1] << 8);
+  T_amb = inbuf[0];
+  T_amb = T_amb | (inbuf[1] << 8);
   // calculate true T_amb
   T_amb = calcTa(T_amb);
   // close I2C bus

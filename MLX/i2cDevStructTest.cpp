@@ -41,7 +41,7 @@ messages[0].buf = outbuf;
 
 // input struct
 messages[1].addr = addr;
-messages[1].flags = I2C_M_RD/* | I2C_M_MOSTART*/;
+messages[1].flags = I2C_M_RD/* | I2C_M_NOSTART*/;
 messages[1].len = sizeof(inbuf);
 messages[1].buf = inbuf;
 
