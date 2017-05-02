@@ -8,5 +8,7 @@ uint16_t dataBuf[64] ={};
 
 int main() {
   mlx.init();
+  uint16_t T_amb = mlx.readTamb();
+  printf("T_amb = %d\n",T_amb);
   return 0;
 }

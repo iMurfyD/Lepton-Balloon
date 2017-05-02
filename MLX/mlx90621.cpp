@@ -148,16 +148,42 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
 */
 // reads cold junction temp from MLX
 uint16_t MLX90621::readTamb(){
+  printf("Reading T_amb\n");
   uint16_t T_amb;
+  uint8_t buf[4];
+  buf[0] = 0x02;
+  buf[1] = 0x40;
+  buf[2] = 0x00;
+  buf[3] = 0x01;
+  // begin i2c interface
+  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
+  int I2C = open(i2cFilename, O_RDWR);
+  if (I2C<0){
+    printf("Failed to initialize I2C Bus\n");
+    return 0;
+  }
+  // use MLX address
+  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
+    // could not set device as slave
+    printf("Could not find device\n");
+  }
   // write command to read ambient temp
-  writeCmd(0x02,0x40,0x00,0x01);
+  if (write(I2C, buf, 4) != 4){
+    // write failed
+    printf("Write Failed\n");
+  }
   // request two data bytes
-  //Wire.requestFrom(MLX_ADDR,2);
+  if (read(I2C, buf, 2) != 2){
+    // read failed
+    printf("Read Failed\n");
+  }
   // LSB first
-  //uint16_t T_amb = Wire.read();
-  //T_amb = T_amb | (Wire.read() << 8);
+  T_amb = buf[0];
+  T_amb = T_amb | (buf[1] << 8);
   // calculate true T_amb
   T_amb = calcTa(T_amb);
+  // close I2C bus
+  close(I2C);
   // return ambient temp
   return T_amb;
 }
@@ -178,16 +204,19 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
   // use EEPROM address
   if (ioctl(I2C, I2C_SLAVE, EEPROM_ADDR) < 0){
     // could not set device as slave
+    printf("Could not find device\n");
   }
   // recieve bytes and write into recieve buffer
   printf("Reading Data\n");
   dataBuf[0] = 0x00;
   if (write(I2C, dataBuf, 1) != 1){
     // write failed
+    printf("Write Failed\n");
   }
   printf("Reading Data\n");
   if (read(I2C, dataBuf, EEPROM_SIZE) != EEPROM_SIZE){
     // read failed
+    printf("Read Failed\n");
   }
   // output table for debugging
   printf("EEPROM Contents:\n");
@@ -197,12 +226,14 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
     }
     printf("\n");
   }
+  close(I2C);
   printf("Done Reading\n");
 }
 // single column frame read
 void MLX90621::readFrame_sc(uint16_t dataBuf[64]) {
   uint8_t column,i;
   uint16_t temp;
+  
   for(column = 0;column<16;column++){
     // write command to read single column
     writeCmd(0x02,column*4,0x01,0x04);
@@ -239,28 +270,58 @@ void MLX90621::readFrame_sl(uint16_t dataBuf[64]) {
 }
 // write command to MLX sensor
 void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads) {
-  //Wire.beginTransmission(MLX_ADDR);
-  //Wire.write(cmd); // command to read ambient temp
-  //Wire.write(offset); // offset address
-  //Wire.write(ad_step); // address step
-  //Wire.write(nReads); // number of reads
+  // begin i2c interface
+  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
+  int I2C = open(i2cFilename, O_RDWR);
+  if (I2C<0){
+    printf("Failed to initialize I2C Bus\n");
+    return;
+  }
+  // use MLX address
+  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
+    // could not set device as slave
+    printf("Could not find device\n");
+  }
+  // write command
+  uint8_t buf[4];
+  buf[0] = cmd;
+  buf[1] = offset;
+  buf[2] = ad_step;
+  buf[3] = nReads;
+  if(write(I2C, buf, 4) != 4){
+    // write failed
+    printf("Write Failed\n");
+  }
   // stop transmission
-  //_error = Wire.endTransmission(false);
-  // check for error
-  //checkError(_error);
+  close(I2C);
 }
 // write data to MLX sensor
 void MLX90621::writeData(uint8_t cmd, uint16_t data, uint8_t check) {
-  //Wire.beginTransmission(MLX_ADDR);
-  //Wire.write(cmd); // command
-  //Wire.write((data&0xff)-check); // LSB check
-  //Wire.write(data&0xff); // LSB
-  //Wire.write((data>>8)-check); // MSB check
-  //Wire.write(data>>8); // MSB
+  // begin i2c interface
+  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
+  int I2C = open(i2cFilename, O_RDWR);
+  if (I2C<0){
+    printf("Failed to initialize I2C Bus\n");
+    return;
+  }
+  // use MLX address
+  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
+    // could not set device as slave
+    printf("Could not find device\n");
+  }
+  // write command
+  uint8_t buf[5];
+  buf[0] = cmd;
+  buf[1] = (data&0xff)-check;
+  buf[2] = data&0xff;
+  buf[3] = (data>>8)-check;
+  buf[4] = data>>8;
+  if(write(I2C, buf, 5) != 5){
+    // write failed
+    printf("Write Failed\n");
+  }
   // stop transmission
-  //_error = Wire.endTransmission(true);
-  // check for error
-  //checkError(_error);
+  close(I2C);
 }
 
 /*
