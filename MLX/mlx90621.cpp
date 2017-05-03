@@ -239,6 +239,55 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
   }
   printf("Done Reading\n");
 }
+// full frame read
+void MLX90621::readFrame(uint16_t dataBuf[64]){
+  uint8_t i;
+  uint16_t temp;
+  // message structs
+  struct i2c_rdwr_ioctl_data packets;
+  struct i2c_msg messages[2];
+  // buffers
+  uint8_t inBuf[128];
+  uint8_t outBuf[4];
+  // initialize I2C interface
+  _I2C = initI2C();
+  // construct output message
+  outBuf[0] = 0x02; // command
+  outBuf[1] = 0x00; // start address
+  outBuf[2] = 0x01; // address step
+  outBuf[3] = 0x40; // number of reads
+  // begin i2c interface
+  _I2C = initI2C();
+  // output struct
+  messages[0].addr = MLX_ADDR;
+  messages[0].flags = 0;
+  messages[0].len = sizeof(outBuf);
+  messages[0].buf = outBuf;
+
+  // output struct
+  messages[1].addr = MLX_ADDR;
+  messages[1].flags = I2C_M_RD/* | I2C_M_NOSTARTi*/;
+  messages[1].len = sizeof(inBuf);
+  messages[1].buf = inBuf;
+
+  // send request to kernel
+  packets.msgs = messages;
+  packets.nmsgs = 2;
+  if(ioctl(_I2C, I2C_RDWR, &packets) < 0){
+    // unable to send data
+    printf("Unable to send data\n");
+    return;
+  }
+
+  // join 8 bit transactions into 16 bit values
+  for(i=0;i<64;i++){
+    temp = inBuf[2*i];
+    temp = temp | (inBuf[2*i+1] << 8);
+    dataBuf[i] = temp;
+  }
+  // close I2C interface
+  closeI2C();
+}
 // single column frame read
 void MLX90621::readFrame_sc(uint16_t dataBuf[64]) {
   uint8_t column,i;

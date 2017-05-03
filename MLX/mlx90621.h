@@ -24,6 +24,8 @@ class MLX90621 {
   void closeI2C(void);
   // read EEPROM data
   void readEEPROM(uint8_t dataBuf[64]);
+  // full frame read
+  void readFrame(uint16_t dataBuf[64]);
   // single column frame read
   void readFrame_sc(uint16_t dataBuf[64]);
   // single line frame read
