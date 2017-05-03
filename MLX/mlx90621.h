@@ -26,10 +26,6 @@ class MLX90621 {
   void readEEPROM(uint8_t dataBuf[64]);
   // full frame read
   void readFrame(uint16_t dataBuf[64]);
-  // single column frame read
-  void readFrame_sc(uint16_t dataBuf[64]);
-  // single line frame read
-  void readFrame_sl(uint16_t dataBuf[64]);
   // write command to MLX
   void writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads);
   // write data to MLX

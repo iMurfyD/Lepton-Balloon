@@ -288,49 +288,7 @@ void MLX90621::readFrame(uint16_t dataBuf[64]){
   // close I2C interface
   closeI2C();
 }
-// single column frame read
-void MLX90621::readFrame_sc(uint16_t dataBuf[64]) {
-  uint8_t column,i;
-  uint8_t tempBuf[8];
-  uint16_t temp;
-  // initialize I2C interface
-  _I2C = initI2C();
-  // iterate through columns
-  for(column = 0;column<16;column++){
-    // write command to read single column
-    writeCmd(0x02,column*4,0x01,0x04);
-    // request 8 bytes (single column)
-    if (read(_I2C, tempBuf, 8) != 8){
-      // read failed
-      printf("Read Failed\n");
-    }
-    // join 8 bit transactions into 16 bit values
-    for(i=0;i<4;i++){
-      temp = tempBuf[2*i];
-      temp = temp | (tempBuf[2*i+1] << 8);
-      dataBuf[4*column+i] = temp;
-    }
-  }
-}
-// single row frame read
-void MLX90621::readFrame_sl(uint16_t dataBuf[64]) {
-  uint8_t row,i;
-  uint16_t temp;
-  for(row = 0;row<4;row++){
-    // write command to read single row
-    writeCmd(0x02,row*16,0x01,0x10);
-    // request 32 bytes (single row)
-    //Wire.requestFrom(MLX_ADDR,32);
-    for(i=0;i<16;i++){
-      //temp = Wire.read();
-      //temp = temp | (Wire.read() << 8);
-      //Serial.print(temp,HEX);Serial.print(',');
-      //delay(2);
-      dataBuf[16*row+i] = temp;
-    }
-    //Serial.println();
-  }
-}
+
 // write command to MLX sensor
 void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads) {
   // begin i2c interface
