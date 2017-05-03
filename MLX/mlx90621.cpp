@@ -29,8 +29,11 @@ uint8_t MLX90621::init(void) {
   uint8_t i;
   // begin i2c interface
   _adapter_nr = 1;
+  _I2C = -1;
   snprintf(_i2cFilename,19,"/dev/i2c-%d",_adapter_nr);
-  _I2C = initI2C();
+  initI2C();
+  // close i2c interface
+  closeI2C();
   // POR
   
   // wait 5ms
@@ -81,7 +84,7 @@ uint8_t MLX90621::init(void) {
 // open i2c interface
 int MLX90621::initI2C(void){
   // check if i2c is already open
-  if(_I2C == 0){
+  if(_I2C < 0){
     _I2C = open(_i2cFilename, O_RDWR);
     if (_I2C<0){
       printf("Failed to initialize I2C Bus\n");
@@ -93,13 +96,15 @@ int MLX90621::initI2C(void){
 // close i2c interface
 void MLX90621::closeI2C(void){
   // check if i2c is open
-  if(_I2C != 0){
+  if(_I2C > 0){
     close(_I2C);
-    _I2C = 0;
+    _I2C = -1;
   }
 }
 // change configuration parameter
 uint8_t MLX90621::setConfig(uint16_t configParam){
+  // initialize I2C
+  initI2C();
   // write configuration parameter to 0x92
   printf("Writing Configuration Parameter...\n");
   writeData(0x03,_configParam,0x55);
@@ -123,6 +128,8 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
     _Bi[i] = (_B[i])/(1 << (_dBs + 3 - adcRes));
     _alpha[i] = ((_alpha0/(1<<_alpha0_s))+(_dalpha[i]/(1<<_dalpha_s)))/(1 << (3 - adcRes));
   }
+  // close I2C interface
+  closeI2C();
 }
 /*
  * Calculation Functions
@@ -173,7 +180,7 @@ uint16_t MLX90621::readTamb(){
   outbuf[2] = 0x00;
   outbuf[3] = 0x01;
   // begin i2c interface
-  _I2C = initI2C();
+  initI2C();
   // output struct
   messages[0].addr = MLX_ADDR;
   messages[0].flags = 0;
@@ -200,6 +207,8 @@ uint16_t MLX90621::readTamb(){
   T_amb = T_amb | (inbuf[1] << 8);
   // calculate true T_amb
   T_amb = calcTa(T_amb);
+  // close I2C interface
+  closeI2C();
   // return ambient temp
   return T_amb;
 }
@@ -207,7 +216,7 @@ uint16_t MLX90621::readTamb(){
 void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
   printf("in readEEPROM\n");
   // begin i2c interface
-  _I2C = initI2C();
+  initI2C();
   // read EEPROM table
   uint16_t i,j;
   // write address to begin reading at
@@ -238,6 +247,8 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
     printf("\n");
   }
   printf("Done Reading\n");
+  // close I2C interface
+  closeI2C();
 }
 // full frame read
 void MLX90621::readFrame(uint16_t dataBuf[64]){
@@ -250,21 +261,20 @@ void MLX90621::readFrame(uint16_t dataBuf[64]){
   uint8_t inBuf[128];
   uint8_t outBuf[4];
   // initialize I2C interface
-  _I2C = initI2C();
+  initI2C();
   // construct output message
   outBuf[0] = 0x02; // command
   outBuf[1] = 0x00; // start address
   outBuf[2] = 0x01; // address step
   outBuf[3] = 0x40; // number of reads
-  // begin i2c interface
-  _I2C = initI2C();
+
   // output struct
   messages[0].addr = MLX_ADDR;
   messages[0].flags = 0;
   messages[0].len = sizeof(outBuf);
   messages[0].buf = outBuf;
 
-  // output struct
+  // input struct
   messages[1].addr = MLX_ADDR;
   messages[1].flags = I2C_M_RD/* | I2C_M_NOSTARTi*/;
   messages[1].len = sizeof(inBuf);
@@ -292,7 +302,7 @@ void MLX90621::readFrame(uint16_t dataBuf[64]){
 // write command to MLX sensor
 void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads) {
   // begin i2c interface
-  _I2C = initI2C();
+  initI2C();
   // use MLX address
   if (ioctl(_I2C, I2C_SLAVE, MLX_ADDR) < 0){
     // could not set device as slave
@@ -312,7 +322,7 @@ void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nR
 // write data to MLX sensor
 void MLX90621::writeData(uint8_t cmd, uint16_t data, uint8_t check) {
   // initialize i2c interface
-  _I2C = initI2C();
+  initI2C();
   // use MLX address
   if (ioctl(_I2C, I2C_SLAVE, MLX_ADDR) < 0){
     // could not set device as slave
@@ -331,27 +341,4 @@ void MLX90621::writeData(uint8_t cmd, uint16_t data, uint8_t check) {
   }
 }
 
-/*
- * General Utility functions
-*/
-/*
-// decrypt I2C errors
-void MLX90621::checkError(uint8_t error) {
-  if(error){
-    Serial.println("Error Establishing Connection With MLX");
-    // decode error
-    switch(error){
-      case 1: Serial.println("Data too long");
-              break;
-      case 2: Serial.println("Recieved Nack on address");
-              break;
-      case 3: Serial.println("Recieved Nack on data");
-              break;
-      default: Serial.println("Unknown error");
-    }
-    // capture process
-    while(1);
-  }
-}
-*/
 

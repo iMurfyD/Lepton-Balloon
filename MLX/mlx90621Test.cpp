@@ -19,6 +19,6 @@ int main() {
     }
     printf("\n");
   }
-  mlx.closeI2C();
+
   return 0;
 }
