@@ -20,6 +20,8 @@ class MLX90621 {
   uint16_t readTamb(void);
   double calcTa(uint16_t rawTemp);
   double calcTo(uint16_t rawTemp, uint8_t loc);
+  // close I2C interface
+  void closeI2C(void);
   // read EEPROM data
   void readEEPROM(uint8_t dataBuf[64]);
   // single column frame read
@@ -32,6 +34,10 @@ class MLX90621 {
   void writeData(uint8_t cmd, uint16_t data, uint8_t check);
   
  private:
+  // file info
+  int _I2C;
+  int _adapter_nr;
+  char _i2cFilename[20];
   //uint8_t _adcRes;
   double _Ta;
   int8_t _brownOut,_osc_trim,_error;
@@ -58,6 +64,8 @@ class MLX90621 {
   
   // check I2C exit code for errors
   void checkError(uint8_t error);
+  // open I2C interface
+  int initI2C(void);
   
 };
 #endif

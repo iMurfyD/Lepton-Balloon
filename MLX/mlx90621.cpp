@@ -11,9 +11,6 @@
 #include <math.h>
 #include "mlx90621.h"
 
-int adapter_nr = 1;
-char i2cFilename[20];
-
 /*
  * Initialization funtions
 */
@@ -30,16 +27,10 @@ MLX90621::MLX90621(uint16_t configParam) {
 // initialize MLX sensor
 uint8_t MLX90621::init(void) {
   uint8_t i;
-  int I2C;
   // begin i2c interface
-  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
-  I2C = open(i2cFilename, O_RDWR);
-  if (I2C<0){
-    printf("Failed to initialize I2C Bus\n");
-    return 0;
-  }
-  // close i2c interface
-  close(I2C);
+  _adapter_nr = 1;
+  snprintf(_i2cFilename,19,"/dev/i2c-%d",_adapter_nr);
+  _I2C = initI2C();
   // POR
   
   // wait 5ms
@@ -86,6 +77,26 @@ uint8_t MLX90621::init(void) {
   printf("Done.\n");
   setConfig(_configParam);
   // set Brown Out flag to 1 (0x92B10)
+}
+// open i2c interface
+int MLX90621::initI2C(void){
+  // check if i2c is already open
+  if(_I2C == 0){
+    _I2C = open(_i2cFilename, O_RDWR);
+    if (_I2C<0){
+      printf("Failed to initialize I2C Bus\n");
+      return 0;
+    }
+  }
+  return _I2C;
+}
+// close i2c interface
+void MLX90621::closeI2C(void){
+  // check if i2c is open
+  if(_I2C != 0){
+    close(_I2C);
+    _I2C = 0;
+  }
 }
 // change configuration parameter
 uint8_t MLX90621::setConfig(uint16_t configParam){
@@ -162,12 +173,7 @@ uint16_t MLX90621::readTamb(){
   outbuf[2] = 0x00;
   outbuf[3] = 0x01;
   // begin i2c interface
-  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
-  int I2C = open(i2cFilename, O_RDWR);
-  if (I2C<0){
-    printf("Failed to initialize I2C Bus\n");
-    return 0;
-  }
+  _I2C = initI2C();
   // output struct
   messages[0].addr = MLX_ADDR;
   messages[0].flags = 0;
@@ -183,7 +189,7 @@ uint16_t MLX90621::readTamb(){
   // send request to kernel
   packets.msgs = messages;
   packets.nmsgs = 2;
-  if(ioctl(I2C, I2C_RDWR, &packets) < 0){
+  if(ioctl(_I2C, I2C_RDWR, &packets) < 0){
     // unable to send data
     printf("Unable to send data\n");
     return 0;
@@ -194,39 +200,32 @@ uint16_t MLX90621::readTamb(){
   T_amb = T_amb | (inbuf[1] << 8);
   // calculate true T_amb
   T_amb = calcTa(T_amb);
-  // close I2C bus
-  close(I2C);
   // return ambient temp
   return T_amb;
 }
 // read EEPROM
 void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
   printf("in readEEPROM\n");
-  // begin wire interface
-  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
-  int I2C = open(i2cFilename, O_RDWR);
-  if (I2C<0){
-    printf("Failed to initialize I2C Bus\n");
-    return;
-  }
+  // begin i2c interface
+  _I2C = initI2C();
   // read EEPROM table
   uint16_t i,j;
   // write address to begin reading at
   printf("Setting Slave Address\n");
   // use EEPROM address
-  if (ioctl(I2C, I2C_SLAVE, EEPROM_ADDR) < 0){
+  if (ioctl(_I2C, I2C_SLAVE, EEPROM_ADDR) < 0){
     // could not set device as slave
     printf("Could not find device\n");
   }
   // recieve bytes and write into recieve buffer
   printf("Reading Data\n");
   dataBuf[0] = 0x00;
-  if (write(I2C, dataBuf, 1) != 1){
+  if (write(_I2C, dataBuf, 1) != 1){
     // write failed
     printf("Write Failed\n");
   }
   printf("Reading Data\n");
-  if (read(I2C, dataBuf, EEPROM_SIZE) != EEPROM_SIZE){
+  if (read(_I2C, dataBuf, EEPROM_SIZE) != EEPROM_SIZE){
     // read failed
     printf("Read Failed\n");
   }
@@ -238,27 +237,30 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
     }
     printf("\n");
   }
-  close(I2C);
   printf("Done Reading\n");
 }
 // single column frame read
 void MLX90621::readFrame_sc(uint16_t dataBuf[64]) {
   uint8_t column,i;
+  uint8_t tempBuf[8];
   uint16_t temp;
-  
+  // initialize I2C interface
+  _I2C = initI2C();
+  // iterate through columns
   for(column = 0;column<16;column++){
     // write command to read single column
     writeCmd(0x02,column*4,0x01,0x04);
     // request 8 bytes (single column)
-    //Wire.requestFrom(MLX_ADDR,8);
+    if (read(_I2C, tempBuf, 8) != 8){
+      // read failed
+      printf("Read Failed\n");
+    }
+    // join 8 bit transactions into 16 bit values
     for(i=0;i<4;i++){
-      //temp = Wire.read();
-      //temp = temp | (Wire.read() << 8);
-      //Serial.print(temp,HEX);Serial.print(',');
-      //delay(2);
+      temp = tempBuf[2*i];
+      temp = temp | (tempBuf[2*i+1] << 8);
       dataBuf[4*column+i] = temp;
     }
-    //Serial.println();
   }
 }
 // single row frame read
@@ -283,14 +285,9 @@ void MLX90621::readFrame_sl(uint16_t dataBuf[64]) {
 // write command to MLX sensor
 void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads) {
   // begin i2c interface
-  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
-  int I2C = open(i2cFilename, O_RDWR);
-  if (I2C<0){
-    printf("Failed to initialize I2C Bus\n");
-    return;
-  }
+  _I2C = initI2C();
   // use MLX address
-  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
+  if (ioctl(_I2C, I2C_SLAVE, MLX_ADDR) < 0){
     // could not set device as slave
     printf("Could not find device\n");
   }
@@ -300,24 +297,17 @@ void MLX90621::writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nR
   buf[1] = offset;
   buf[2] = ad_step;
   buf[3] = nReads;
-  if(write(I2C, buf, 4) != 4){
+  if(write(_I2C, buf, 4) != 4){
     // write failed
     printf("Write Failed\n");
   }
-  // stop transmission
-  close(I2C);
 }
 // write data to MLX sensor
 void MLX90621::writeData(uint8_t cmd, uint16_t data, uint8_t check) {
-  // begin i2c interface
-  snprintf(i2cFilename,19,"/dev/i2c-%d",adapter_nr);
-  int I2C = open(i2cFilename, O_RDWR);
-  if (I2C<0){
-    printf("Failed to initialize I2C Bus\n");
-    return;
-  }
+  // initialize i2c interface
+  _I2C = initI2C();
   // use MLX address
-  if (ioctl(I2C, I2C_SLAVE, MLX_ADDR) < 0){
+  if (ioctl(_I2C, I2C_SLAVE, MLX_ADDR) < 0){
     // could not set device as slave
     printf("Could not find device\n");
   }
@@ -328,12 +318,10 @@ void MLX90621::writeData(uint8_t cmd, uint16_t data, uint8_t check) {
   buf[2] = data&0xff;
   buf[3] = (data>>8)-check;
   buf[4] = data>>8;
-  if(write(I2C, buf, 5) != 5){
+  if(write(_I2C, buf, 5) != 5){
     // write failed
     printf("Write Failed\n");
   }
-  // stop transmission
-  close(I2C);
 }
 
 /*
