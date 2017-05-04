@@ -47,15 +47,17 @@ class MLX90621 {
   int16_t _K_t1,_K_t2,_V_th;
   double _K_t1_c, _K_t2_c, _V_th_c;
   // To calculation parameters
-  int16_t _A_com, _emissivity;
-  uint8_t _dAs, _dBs, _TGC;
+  uint16_t _A_com, _emissivity;
+  uint8_t _dAs, _Bs, _TGC;
   uint8_t _Ai[64] = {};
   uint8_t _Bi[64] = {};
   double _alpha[64] = {};
   double _ksta,_Ks4;
-  int16_t _dalpha_cp;
+  uint16_t _dalpha_cp;
   uint8_t _alpha0_s,_dalpha_s;
   uint16_t _alpha_cp,_alpha0;
+  uint8_t _Ks_s,_B_cp;
+  uint16_t _A_cp;
   
   // open I2C interface
   int initI2C(void);

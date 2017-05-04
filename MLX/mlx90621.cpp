@@ -41,35 +41,6 @@ uint8_t MLX90621::init(void) {
   // read EEPROM table
   printf("Reading EEPROM...\n");
   readEEPROM(_EEPROM_Data);
-  // store calibration constants
-  for(i=0;i<64;i++){
-    _dA[i] = _EEPROM_Data[i];
-    _B[i] = _EEPROM_Data[i+64];
-    _dalpha[i] = _EEPROM_Data[i+128];
-  }
-  _osc_trim = _EEPROM_Data[247];
-  // Ta compensation values
-  _K_t1 = (_EEPROM_Data[219]<<8) | _EEPROM_Data[218];
-  _K_t2 = (_EEPROM_Data[221]<<8) | _EEPROM_Data[220];
-  _V_th = (_EEPROM_Data[223]<<8) | _EEPROM_Data[222];
-  _K_ts = _EEPROM_Data[210];
-  // To compensation values
-  _A_com = (_EEPROM_Data[209]<<8) | _EEPROM_Data[208];
-  _dAs = (_EEPROM_Data[217] & 0xF0) >> 4;
-  _dBs = _EEPROM_Data[217] & 0x0F;
-  _emissivity = (_EEPROM_Data[229]<<8) | _EEPROM_Data[228];
-  _dalpha_cp = (_EEPROM_Data[215]<<8) | _EEPROM_Data[214];
-  _TGC = _EEPROM_Data[216];
-  _alpha0 = (_EEPROM_Data[225]<<8) | _EEPROM_Data[224];
-  _alpha0_s = _EEPROM_Data[226];
-  _dalpha_s = _EEPROM_Data[227];
-  _ksta = (_EEPROM_Data[231]<<8) | _EEPROM_Data[230];
-  // convert 2s compliment to unsigned
-  _K_t1 = uint16_t(_K_t1);
-  _K_t2 = uint16_t(_K_t2);
-  _V_th = uint16_t(_V_th);
-  //printf("Unsigned Ta Values:\n");
-  //Serial.print(_K_t1);Serial.print(',');Serial.print(_K_t2);Serial.print(',');Serial.println(_V_th);
   // only use configParam from EEPROM if no user supplied value.
   if (_configParam == 0){
     _configParam = (_EEPROM_Data[246]<<8) | _EEPROM_Data[245];
@@ -103,30 +74,70 @@ void MLX90621::closeI2C(void){
 }
 // change configuration parameter
 uint8_t MLX90621::setConfig(uint16_t configParam){
+  int i;
   // initialize I2C
   initI2C();
   // write configuration parameter to 0x92
   printf("Writing Configuration Parameter...\n");
   writeData(0x03,_configParam,0x55);
   printf("Done.\n");
+  // store calibration constants
+  for(i=0;i<64;i++){
+    _dA[i] = _EEPROM_Data[i];
+    _B[i] = _EEPROM_Data[i+64];
+    _dalpha[i] = _EEPROM_Data[i+128];
+  }
+  _osc_trim = _EEPROM_Data[247];
+  // Ta compensation values
+  _K_t1 = (_EEPROM_Data[219]<<8) | _EEPROM_Data[218];
+  _K_t2 = (_EEPROM_Data[221]<<8) | _EEPROM_Data[220];
+  _V_th = (_EEPROM_Data[223]<<8) | _EEPROM_Data[222];
+  _K_ts = _EEPROM_Data[210];
+  // To compensation values
+  _Ks_s = _EEPROM_Data[0xC0];
+  _Ks4 = uint8_t(_EEPROM_Data[0xC4]);
+  _A_com = uint16_t((_EEPROM_Data[0xD1]<<8) | _EEPROM_Data[0xD0]);
+  _A_cp = uint16_t((_EEPROM_Data[0xD4]<<8) | _EEPROM_Data[0xD3]);
+  _B_cp = uint8_t(_EEPROM_Data[0xD5]);
+  _alpha_cp = (_EEPROM_Data[0xD7]<<8) | _EEPROM_Data[0xD6];
+  _TGC = uint8_t(_EEPROM_Data[0xD8]);
+  _dAs = (_EEPROM_Data[0xD9] & 0xF0) >> 4;
+  _Bs = _EEPROM_Data[0xD9] & 0x0F;
+  _alpha0 = (_EEPROM_Data[0xE1]<<8) | _EEPROM_Data[0xE0];
+  _alpha0_s = _EEPROM_Data[0xE2];
+  _dalpha_s = _EEPROM_Data[0xE3];
+  _emissivity = (_EEPROM_Data[0xE5]<<8) | _EEPROM_Data[0xE6];
+  _ksta = uint16_t((_EEPROM_Data[0xE7]<<8) | _EEPROM_Data[0xE6]);
+  // convert 2s compliment to unsigned
+  _K_t1 = uint16_t(_K_t1);
+  _K_t2 = uint16_t(_K_t2);
+  _V_th = uint16_t(_V_th);
   // extract ADC resolution for clarity
   uint8_t adcRes = ((_configParam & 48) >> 4);
   // compensate Ta parameters based on config parameter
-  _V_th_c = double(_V_th) / (1 << (3 - adcRes));
-  _K_t1_c = double(_K_t1) / (1 << ((_K_ts & 240) >> 4));
-  _K_t1_c = _K_t1_c / (1 << (3 - adcRes));
-  _K_t2_c = double(_K_t2) / (1L << (10 + (_K_ts & 15)));
-  _K_t2_c = _K_t2_c / (1 << (3 - adcRes));
+  //_V_th_c = double(_V_th) / (1 << (3 - adcRes));
+  _V_th_c = double(_V_th) / pow(2,3-adcRes);
+  //_K_t1_c = double(_K_t1) / (1 << ((_K_ts & 240) >> 4));
+  _K_t1_c = double(_K_t1) / pow(2,(_K_ts & 240) >> 4);
+  //_K_t1_c = _K_t1_c / (1 << (3 - adcRes));
+  _K_t1_c = _K_t1_c / pow(2,3-adcRes);
+  //_K_t2_c = double(_K_t2) / (1L << (10 + (_K_ts & 15)));
+  _K_t2_c = double(_K_t2) / pow(2,10 + (_K_ts & 15));
+  //_K_t2_c = _K_t2_c / (1 << (3 - adcRes));
+  _K_t2_c = _K_t2_c / pow(2,3-adcRes);
   // compensate To parameters based on config parameter
-  _ksta = _ksta/(1L << 20);
+  //_ksta = _ksta/(1L << 20);
+  _ksta = _ksta/pow(2,20);
   int8_t ks4ee = _EEPROM_Data[196];
   uint8_t ks_s = _EEPROM_Data[192] & 0x0F;
-  _Ks4 = ks4ee/(1L << (ks_s+8));
-  uint8_t i = 0;
+  _Ks4 = ks4ee/pow(2,(ks_s+8));
   for(i=0;i<64;i++){
-    _Ai[i] = ((_A_com + _dA[i]) * (1 << _dAs))/(1 << (3 - adcRes));
-    _Bi[i] = (_B[i])/(1 << (_dBs + 3 - adcRes));
-    _alpha[i] = ((_alpha0/(1<<_alpha0_s))+(_dalpha[i]/(1<<_dalpha_s)))/(1 << (3 - adcRes));
+    //_Ai[i] = ((_A_com + _dA[i]) * (1 << _dAs))/(1 << (3 - adcRes));
+    _Ai[i] = ((_A_com + _dA[i]) * pow(2,_dAs))/pow(2,(3 - adcRes));
+    //_Bi[i] = (_B[i])/(1 << (_Bs + 3 - adcRes));
+    _Bi[i] = (_B[i])/pow(2,(_Bs + 3 - adcRes));
+    //_alpha[i] = ((_alpha0/(1<<_alpha0_s))+(_dalpha[i]/(1<<_dalpha_s)))/(1 << (3 - adcRes));
+    _alpha[i] = ((_alpha0/pow(2,_alpha0_s))+(_dalpha[i]/pow(2,_dalpha_s)))/pow(2,(3 - adcRes));
   }
   // close I2C interface
   closeI2C();
@@ -147,19 +158,28 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
     // Calculate Compensated IR signal
     // compensate for offset
     double V_ir_c = rawTemp - (_Ai[loc] + _Bi[loc] * (_Ta - 25.0) );
+    printf("V_ir_c = %g\n",V_ir_c);
     // compensate for thermal gradient
     V_ir_c = V_ir_c - (double(_TGC) / 32.0);
+    printf("V_ir_c = %g\n",V_ir_c);
     // compensate for emissivity
     V_ir_c = V_ir_c / _emissivity;
-    printf("V_ir_c\n");
-    //Serial.println(V_ir_c);
+    printf("V_ir_c = %g\n",V_ir_c);
     // Calculate compensated alpha
+    printf("alpha=%d\n",_alpha[loc]);
+    printf("alpha_cp=%d\n",_alpha_cp);
+    printf("TGC=%d\n",_TGC);
+    printf("ksta=%d\n",_ksta);
     double alpha_c = (1.0 + _ksta*(_Ta-25.0)) * (_alpha[loc] - _TGC*_alpha_cp);
+    printf("alpha_c = %g\n",alpha_c);
     // calculate Sx
     double Tak = pow(_Ta+273.15,4);
+    printf("Tak = %g\n",Tak);
     double Sx = _Ks4 * pow(pow(alpha_c,3)*V_ir_c+pow(alpha_c,4)*Tak,0.25);
+    printf("Sx=%g\n",Sx);
     // calculate final temperature
-    double To = pow(V_ir_c/(alpha_c*(1-_Ks4*273.15)+Sx),0.25) - 273.15; 
+    double To = pow((V_ir_c/(alpha_c*(1-_Ks4*273.15)+Sx)) + Tak,0.25) - 273.15; 
+    printf("To=%g\n",To);
 }
 /*
  * Data Interaction functions
