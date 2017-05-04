@@ -21,13 +21,13 @@ int main() {
   }
 
   printf("\n%g\n\n",mlx.calcTo(dataBuf[1],1));
-/*
+
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
-      printf("%g,",mlx.calcTo(dataBuf[j*4+1],j*4+i));
+      printf("%.2f,\t",mlx.calcTo(dataBuf[j*4+1],j*4+i));
     }
     printf("\n");
   }
-*/
+
   return 0;
 }

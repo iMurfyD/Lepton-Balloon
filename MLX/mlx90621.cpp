@@ -115,28 +115,19 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   // extract ADC resolution for clarity
   uint8_t adcRes = ((_configParam & 48) >> 4);
   // compensate Ta parameters based on config parameter
-  //_V_th_c = double(_V_th) / (1 << (3 - adcRes));
   _V_th_c = double(_V_th) / pow(2,3-adcRes);
-  //_K_t1_c = double(_K_t1) / (1 << ((_K_ts & 240) >> 4));
   _K_t1_c = double(_K_t1) / pow(2,(_K_ts & 240) >> 4);
-  //_K_t1_c = _K_t1_c / (1 << (3 - adcRes));
   _K_t1_c = _K_t1_c / pow(2,3-adcRes);
-  //_K_t2_c = double(_K_t2) / (1L << (10 + (_K_ts & 15)));
   _K_t2_c = double(_K_t2) / pow(2,10 + (_K_ts & 15));
-  //_K_t2_c = _K_t2_c / (1 << (3 - adcRes));
   _K_t2_c = _K_t2_c / pow(2,3-adcRes);
   // compensate To parameters based on config parameter
-  //_ksta = _ksta/(1L << 20);
   _ksta = _ksta/pow(2,20);
   int8_t ks4ee = _EEPROM_Data[196];
   uint8_t ks_s = _EEPROM_Data[192] & 0x0F;
   _Ks4 = ks4ee/pow(2,(ks_s+8));
   for(i=0;i<64;i++){
-    //_Ai[i] = ((_A_com + _dA[i]) * (1 << _dAs))/(1 << (3 - adcRes));
     _Ai[i] = ((_A_com + _dA[i]) * pow(2,_dAs))/pow(2,(3 - adcRes));
-    //_Bi[i] = (_B[i])/(1 << (_Bs + 3 - adcRes));
     _Bi[i] = (_B[i])/pow(2,(_Bs + 3 - adcRes));
-    //_alpha[i] = ((_alpha0/(1<<_alpha0_s))+(_dalpha[i]/(1<<_dalpha_s)))/(1 << (3 - adcRes));
     _alpha[i] = ((_alpha0/pow(2,_alpha0_s))+(_dalpha[i]/pow(2,_dalpha_s)))/pow(2,(3 - adcRes));
   }
   // close I2C interface
@@ -158,28 +149,28 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
     // Calculate Compensated IR signal
     // compensate for offset
     double V_ir_c = rawTemp - (_Ai[loc] + _Bi[loc] * (_Ta - 25.0) );
-    printf("V_ir_c = %g\n",V_ir_c);
+    //printf("V_ir_c = %g\n",V_ir_c);
     // compensate for thermal gradient
     V_ir_c = V_ir_c - (double(_TGC) / 32.0);
-    printf("V_ir_c = %g\n",V_ir_c);
+    //printf("V_ir_c = %g\n",V_ir_c);
     // compensate for emissivity
     V_ir_c = V_ir_c / _emissivity;
-    printf("V_ir_c = %g\n",V_ir_c);
+    //printf("V_ir_c = %g\n",V_ir_c);
     // Calculate compensated alpha
-    printf("alpha=%d\n",_alpha[loc]);
-    printf("alpha_cp=%d\n",_alpha_cp);
-    printf("TGC=%d\n",_TGC);
-    printf("ksta=%d\n",_ksta);
+    //printf("alpha=%d\n",_alpha[loc]);
+    //printf("alpha_cp=%d\n",_alpha_cp);
+    //printf("TGC=%d\n",_TGC);
+    //printf("ksta=%d\n",_ksta);
     double alpha_c = (1.0 + _ksta*(_Ta-25.0)) * (_alpha[loc] - _TGC*_alpha_cp);
-    printf("alpha_c = %g\n",alpha_c);
+    //printf("alpha_c = %g\n",alpha_c);
     // calculate Sx
     double Tak = pow(_Ta+273.15,4);
-    printf("Tak = %g\n",Tak);
+    //printf("Tak = %g\n",Tak);
     double Sx = _Ks4 * pow(pow(alpha_c,3)*V_ir_c+pow(alpha_c,4)*Tak,0.25);
-    printf("Sx=%g\n",Sx);
+    //printf("Sx=%g\n",Sx);
     // calculate final temperature
     double To = pow((V_ir_c/(alpha_c*(1-_Ks4*273.15)+Sx)) + Tak,0.25) - 273.15; 
-    printf("To=%g\n",To);
+    //printf("To=%g\n",To);
 }
 /*
  * Data Interaction functions
