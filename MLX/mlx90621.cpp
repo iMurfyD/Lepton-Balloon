@@ -99,7 +99,7 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   _A_com = (_EEPROM_Data[0xD1]<<8) | _EEPROM_Data[0xD0];
   int16_t A_cp_EE = (_EEPROM_Data[0xD4]<<8) | _EEPROM_Data[0xD3];
   int8_t B_cp_EE = _EEPROM_Data[0xD5];
-  _alpha_cp = (_EEPROM_Data[0xD7]<<8) | _EEPROM_Data[0xD6];
+  uint16_t alpha_cp_EE = (_EEPROM_Data[0xD7]<<8) | _EEPROM_Data[0xD6];
   int8_t TGC_EE = _EEPROM_Data[0xD8];
   _dAs = (_EEPROM_Data[0xD9] & 0xF0) >> 4;
   _Bs = _EEPROM_Data[0xD9] & 0x0F;
@@ -114,7 +114,7 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   _V_th = uint16_t(_V_th);
   // extract ADC resolution for clarity
   uint8_t adcRes = ((_configParam & 48) >> 4);
-  printf("ADC_Res = %d\n",adcRes);
+  //printf("ADC_Res = %d\n",adcRes);
   // compensate Ta parameters based on config parameter
   _A_cp = double(A_cp_EE)/pow(2,(3 - adcRes));
   _B_cp = double(B_cp_EE)/pow(2,(_Bs + 3 - adcRes));
@@ -124,6 +124,7 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   _K_t2_c = double(_K_t2) / pow(2,10 + (_K_ts & 15));
   _K_t2_c = _K_t2_c / pow(2,3-adcRes);
   // compensate To parameters based on config parameter
+  _alpha_cp = double(alpha_cp_EE)/pow(2,_alpha0_s+3-adcRes);
   _TGC = double(TGC_EE)/32.0;
   _emissivity = double(emissivity_EE/32768.0);
   _ksta = double(ksta_EE)/pow(2,20);
@@ -173,6 +174,7 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     // calculate final temperature
     double To = pow((V_ir_c/(alpha_c*(1-_Ks4*273.15)+Sx)) + Tak,0.25) - 273.15; 
 
+    /*
     printf("Vir = %d\n",rawTemp);
     printf("Ta = %g\n",_Ta);
     printf("dA = %d\n",_dA[loc]);
@@ -185,7 +187,7 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     printf("A_com = %d\n",_A_com);
     printf("A_cp = %g\n",_A_cp);
     printf("B_cp = %g\n",_B_cp);
-    printf("alpha_cp = %d\n",_alpha_cp);
+    printf("alpha_cp = %g\n",_alpha_cp);
     printf("TGC = %g\n",_TGC);
     printf("dAs = %d\n",_dAs);
     printf("Bs = %d\n",_Bs);
@@ -196,11 +198,11 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     printf("ksta = %g\n",_ksta);
     printf("V_ir_c = %g\n",V_ir_c);
     printf("alpha=%g\n",_alpha[loc]);
-    printf("alpha_cp=%d\n",_alpha_cp);
     printf("alpha_c = %g\n",alpha_c);
     printf("Tak = %g\n",Tak);
     printf("Sx=%g\n",Sx);
     printf("To=%g\n",To);
+    */
 }
 /*
  * Data Interaction functions
@@ -278,6 +280,7 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
     printf("Read Failed\n");
   }
   // output table for debugging
+  /*
   printf("EEPROM Contents:\n");
   for(j=0;j<32;j++){
     for(i=0;i<8;i++){
@@ -285,6 +288,7 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
     }
     printf("\n");
   }
+  */
   //printf("Done Reading\n");
   // close I2C interface
   closeI2C();

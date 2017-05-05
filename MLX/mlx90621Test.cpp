@@ -15,25 +15,25 @@ int main() {
   printf("calcd T_amb = %g\n",T_amb);
   mlx.readFrame(dataBuf);
 
-  /*
+  printf("Raw Sensor Data\n");
+
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
-      printf("%x,",dataBuf[j*4+1]);
+      printf("%d,\t",dataBuf[j*4+1]);
     }
     printf("\n");
   }
-  */
   
-  printf("%g\n",mlx.calcTo(dataBuf[0],0));
+//  printf("%g\n",mlx.calcTo(dataBuf[0],0));
 
-  /*
+  printf("Calculated Temperature Data\n");
+
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
       printf("%.2f,\t",mlx.calcTo(dataBuf[j*4+1],j*4+i));
     }
     printf("\n");
   }
-  */
 
   return 0;
 }
