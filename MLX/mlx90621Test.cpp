@@ -4,7 +4,7 @@
 MLX90621 mlx;
 
 // databuffer for IR data
-uint16_t dataBuf[64] ={};
+int16_t dataBuf[64] ={};
 
 int main() {
   int i,j;

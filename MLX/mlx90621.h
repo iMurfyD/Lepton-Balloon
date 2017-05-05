@@ -19,11 +19,11 @@ class MLX90621 {
   uint8_t init(void);
   uint16_t readTamb(void);
   double calcTa(uint16_t rawTemp);
-  double calcTo(uint16_t rawTemp, uint8_t loc);
+  double calcTo(int16_t rawTemp, uint8_t loc);
   // read EEPROM data
   void readEEPROM(uint8_t dataBuf[64]);
   // full frame read
-  void readFrame(uint16_t dataBuf[64]);
+  void readFrame(int16_t dataBuf[64]);
   // write command to MLX
   void writeCmd(uint8_t cmd, uint8_t offset, uint8_t ad_step, uint8_t nReads);
   // write data to MLX
@@ -48,18 +48,16 @@ class MLX90621 {
   double _K_t1_c, _K_t2_c, _V_th_c;
   // To calculation parameters
   uint8_t _Ks_s;
-  int16_t _A_com, _A_cp;
-  int8_t _B_cp;
+  int16_t _A_com;
   uint16_t _alpha_cp;
   uint8_t _dAs, _Bs;
   uint16_t _alpha0;
   uint8_t _alpha0_s, _dalpha_s;
-  uint16_t _emissivity;
 
   double _Ai[64] = {};
   double _Bi[64] = {};
   double _alpha[64] = {};
-  double _TGC, _ksta, _Ks4;
+  double _A_cp, _B_cp, _TGC, _ksta, _Ks4, _emissivity;
   //uint16_t _dalpha_cp;
   
   // open I2C interface

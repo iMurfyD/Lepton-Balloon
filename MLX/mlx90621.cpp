@@ -97,8 +97,8 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   _Ks_s = _EEPROM_Data[0xC0];
   int8_t Ks4_EE = _EEPROM_Data[0xC4];
   _A_com = (_EEPROM_Data[0xD1]<<8) | _EEPROM_Data[0xD0];
-  _A_cp = (_EEPROM_Data[0xD4]<<8) | _EEPROM_Data[0xD3];
-  _B_cp = _EEPROM_Data[0xD5];
+  int16_t A_cp_EE = (_EEPROM_Data[0xD4]<<8) | _EEPROM_Data[0xD3];
+  int8_t B_cp_EE = _EEPROM_Data[0xD5];
   _alpha_cp = (_EEPROM_Data[0xD7]<<8) | _EEPROM_Data[0xD6];
   int8_t TGC_EE = _EEPROM_Data[0xD8];
   _dAs = (_EEPROM_Data[0xD9] & 0xF0) >> 4;
@@ -106,7 +106,7 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   _alpha0 = (_EEPROM_Data[0xE1]<<8) | _EEPROM_Data[0xE0];
   _alpha0_s = _EEPROM_Data[0xE2];
   _dalpha_s = _EEPROM_Data[0xE3];
-  _emissivity = (_EEPROM_Data[0xE5]<<8) | _EEPROM_Data[0xE6];
+  uint16_t emissivity_EE = (_EEPROM_Data[0xE5]<<8) | _EEPROM_Data[0xE6];
   int16_t ksta_EE = (_EEPROM_Data[0xE7]<<8) | _EEPROM_Data[0xE6];
   // convert 2s compliment to unsigned
   _K_t1 = uint16_t(_K_t1);
@@ -116,13 +116,16 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
   uint8_t adcRes = ((_configParam & 48) >> 4);
   printf("ADC_Res = %d\n",adcRes);
   // compensate Ta parameters based on config parameter
+  _A_cp = double(A_cp_EE)/pow(2,(3 - adcRes));
+  _B_cp = double(B_cp_EE)/pow(2,(_Bs + 3 - adcRes));
   _V_th_c = double(_V_th) / pow(2,3-adcRes);
   _K_t1_c = double(_K_t1) / pow(2,(_K_ts & 240) >> 4);
   _K_t1_c = _K_t1_c / pow(2,3-adcRes);
   _K_t2_c = double(_K_t2) / pow(2,10 + (_K_ts & 15));
   _K_t2_c = _K_t2_c / pow(2,3-adcRes);
   // compensate To parameters based on config parameter
-  _TGC = double(TGC_EE/32.0);
+  _TGC = double(TGC_EE)/32.0;
+  _emissivity = double(emissivity_EE/32768.0);
   _ksta = double(ksta_EE)/pow(2,20);
   _Ks4 = double(Ks4_EE)/pow(2,(_Ks_s+8));
   for(i=0;i<64;i++){
@@ -142,19 +145,24 @@ double MLX90621::calcTa(uint16_t rawTemp) {
   double sqrRt = pow(pow(_K_t1_c,2) - 4.0 * _K_t2_c * (_V_th_c-double(rawTemp)),0.5);
   Ta = ((-_K_t1_c+sqrRt)/(2.0*_K_t2_c))+25.0;
   _Ta = Ta;
+  /*
   printf("Vth = %g\n",_V_th_c);
   printf("Kt1 = %g\n",_K_t1_c);
   printf("Kt2 = %g\n",_K_t2_c);
   printf("Ta = %g\n",_Ta);
+  */
   return Ta;
 }
 // calculates temperature seen by single pixel
-double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
+double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     // Calculate Compensated IR signal
+    // Calculate compensation pixel value
+    int8_t V_cp = -36; // TEMPORARY
+    double V_ir_cp_c = double(V_cp) - (_A_cp + _B_cp * (_Ta-25.0));
     // compensate for offset
     double V_ir_c = rawTemp - (_Ai[loc] + _Bi[loc] * (_Ta - 25.0) );
     // compensate for thermal gradient
-    V_ir_c = V_ir_c - (double(_TGC) / 32.0);
+    V_ir_c = V_ir_c - _TGC * V_ir_cp_c;
     // compensate for emissivity
     V_ir_c = V_ir_c / _emissivity;
     // Calculate compensated alpha
@@ -164,15 +172,19 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
     double Sx = double(_Ks4) * pow(pow(alpha_c,3)*V_ir_c+pow(alpha_c,4)*Tak,0.25);
     // calculate final temperature
     double To = pow((V_ir_c/(alpha_c*(1-_Ks4*273.15)+Sx)) + Tak,0.25) - 273.15; 
+
+    printf("Vir = %d\n",rawTemp);
+    printf("Ta = %g\n",_Ta);
     printf("dA = %d\n",_dA[loc]);
     printf("B = %d\n",_B[loc]);
     printf("Bi = %g\n",_Bi[loc]);
+    printf("Ai = %g\n",_Ai[loc]);
     printf("dalpha = %d\n",_dalpha[loc]);
     printf("Ks_s = %d\n",_Ks_s);
     printf("Ks4 = %g\n",_Ks4);
     printf("A_com = %d\n",_A_com);
-    printf("A_cp = %d\n",_A_cp);
-    printf("B_cp = %d\n",_B_cp);
+    printf("A_cp = %g\n",_A_cp);
+    printf("B_cp = %g\n",_B_cp);
     printf("alpha_cp = %d\n",_alpha_cp);
     printf("TGC = %g\n",_TGC);
     printf("dAs = %d\n",_dAs);
@@ -180,7 +192,7 @@ double MLX90621::calcTo(uint16_t rawTemp, uint8_t loc){
     printf("alpha_0 = %d\n",_alpha0);
     printf("alpha_0_s = %d\n",_alpha0_s);
     printf("dalpha_s = %d\n",_dalpha_s);
-    printf("emissivity = %d\n",_emissivity);
+    printf("emissivity = %g\n",_emissivity);
     printf("ksta = %g\n",_ksta);
     printf("V_ir_c = %g\n",V_ir_c);
     printf("alpha=%g\n",_alpha[loc]);
@@ -278,9 +290,9 @@ void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
   closeI2C();
 }
 // full frame read
-void MLX90621::readFrame(uint16_t dataBuf[64]){
+void MLX90621::readFrame(int16_t dataBuf[64]){
   uint8_t i;
-  uint16_t temp;
+  int16_t temp;
   // message structs
   struct i2c_rdwr_ioctl_data packets;
   struct i2c_msg messages[2];
