@@ -207,6 +207,31 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
 /*
  * Data Interaction functions
 */
+// output frame as text file
+void MLX90621::exportText(double dataBuf[64], char *fileName){
+  int i,j;
+  int ret = -1;
+  char buf[6];
+  // open file
+  int outFile = open(fileName,O_WRONLY|O_CREAT,S_IRWXO);
+  // check if file is actually open
+  if(outFile<0)
+      printf("can't open output file");
+  // write frame data to file
+  for(j=0;j<16;j++){
+      for(i=0;i<4;i++){
+          sprintf(buf,"%0.2f,",dataBuf[4*j+i]);
+          write(outFile,buf,6);
+      }
+      write(outFile,"\n",1);
+  }
+  // close file
+  ret = close(outFile);
+  // check if file actually closed
+  if (ret == -1)
+      printf("failed to close output file");
+  return;
+}
 // reads cold junction temp from MLX
 uint16_t MLX90621::readTamb(){
   printf("Reading T_amb\n");

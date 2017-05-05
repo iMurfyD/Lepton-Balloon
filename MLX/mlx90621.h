@@ -20,6 +20,8 @@ class MLX90621 {
   uint16_t readTamb(void);
   double calcTa(uint16_t rawTemp);
   double calcTo(int16_t rawTemp, uint8_t loc);
+  // export frame as text
+  void exportText(double dataBuf[64], char *fileName);
   // read EEPROM data
   void readEEPROM(uint8_t dataBuf[64]);
   // full frame read
