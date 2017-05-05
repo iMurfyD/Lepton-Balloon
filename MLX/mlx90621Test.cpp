@@ -9,25 +9,31 @@ uint16_t dataBuf[64] ={};
 int main() {
   int i,j;
   mlx.init();
-  uint16_t T_amb = mlx.readTamb();
-  printf("T_amb = %d\n",T_amb);
+  uint16_t T_amb_r = mlx.readTamb();
+  printf("raw T_amb = %d\n",T_amb_r);
+  double T_amb = mlx.calcTa(T_amb_r);
+  printf("calcd T_amb = %g\n",T_amb);
   mlx.readFrame(dataBuf);
 
+  /*
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
       printf("%x,",dataBuf[j*4+1]);
     }
     printf("\n");
   }
+  */
+  
+  printf("%g\n",mlx.calcTo(dataBuf[0],0));
 
-  printf("\n%g\n\n",mlx.calcTo(dataBuf[1],1));
-
+  /*
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
       printf("%.2f,\t",mlx.calcTo(dataBuf[j*4+1],j*4+i));
     }
     printf("\n");
   }
+  */
 
   return 0;
 }
