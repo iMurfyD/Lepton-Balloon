@@ -139,9 +139,13 @@ uint8_t MLX90621::setConfig(uint16_t configParam){
 // calculates actual cold junction temp from raw data
 double MLX90621::calcTa(uint16_t rawTemp) {
   double Ta = 0;
-  double sqrRt = pow(pow(_K_t1_c,2) - 4.0 * _K_t2_c * (_V_th_c-rawTemp),0.5);
+  double sqrRt = pow(pow(_K_t1_c,2) - 4.0 * _K_t2_c * (_V_th_c-double(rawTemp)),0.5);
   Ta = ((-_K_t1_c+sqrRt)/(2.0*_K_t2_c))+25.0;
   _Ta = Ta;
+  printf("Vth = %g\n",_V_th_c);
+  printf("Kt1 = %g\n",_K_t1_c);
+  printf("Kt2 = %g\n",_K_t2_c);
+  printf("Ta = %g\n",_Ta);
   return Ta;
 }
 // calculates temperature seen by single pixel
@@ -230,8 +234,6 @@ uint16_t MLX90621::readTamb(){
   // LSB first
   T_amb = inbuf[0];
   T_amb = T_amb | (inbuf[1] << 8);
-  // calculate true T_amb
-  T_amb = calcTa(T_amb);
   // close I2C interface
   closeI2C();
   // return ambient temp
