@@ -3,13 +3,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#include <linux/types.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <math.h>
+#include <png++/png.hpp>
 #include "mlx90621.h"
+
 
 /*
  * Initialization funtions
@@ -39,7 +43,7 @@ uint8_t MLX90621::init(void) {
   // wait 5ms
   usleep(5000);
   // read EEPROM table
-  printf("Reading EEPROM...\n");
+  //printf("Reading EEPROM...\n");
   readEEPROM(_EEPROM_Data);
   // only use configParam from EEPROM if no user supplied value.
   if (_configParam == 0){
@@ -205,11 +209,62 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     */
 }
 /*
+ *Output functions
+*/
+// output frame as text file
+void MLX90621::exportText(double dataBuf[64], char *fileName){
+  int i,j;
+  int ret = -1;
+  char buf[6];
+  // open file
+  int outFile = open(fileName,O_WRONLY|O_CREAT,S_IRWXO);
+  // check if file is actually open
+  if(outFile<0)
+      printf("can't open output file");
+  // write frame data to file
+  for(j=0;j<16;j++){
+      for(i=0;i<4;i++){
+          sprintf(buf,"%0.2f,",dataBuf[4*j+i]);
+          write(outFile,buf,6);
+      }
+      write(outFile,"\n",1);
+  }
+  // close file
+  ret = close(outFile);
+  // check if file actually closed
+  if (ret == -1)
+      printf("failed to close output file");
+  return;
+}
+
+// output frame as text file
+void MLX90621::exportPng(double dataBuf[64], char *fileName){
+  int i = 0;
+  // convert double to uint16
+  uint16_t buf[MLXWIDTH*MLXHEIGHT];
+  for(i=0;i<MLXWIDTH*MLXHEIGHT;i++){
+    buf[i]=uint16_t(dataBuf[i]*1000);
+  }
+  // create image object
+  png::image< png::gray_pixel_16 > outImage(MLXWIDTH, MLXHEIGHT);
+  for (png::uint_32 y = 0; y < outImage.get_height(); ++y)
+  {
+    for (png::uint_32 x = 0; x < outImage.get_width(); ++x)
+    {
+    outImage[y][x] = png::gray_pixel_16(buf[y*MLXWIDTH+x]);
+    // non-checking equivalent of image.set_pixel(x, y, ...);
+    }
+  }
+  // output PNG
+  outImage.write(fileName);
+}
+
+/*
  * Data Interaction functions
 */
 // reads cold junction temp from MLX
 uint16_t MLX90621::readTamb(){
-  printf("Reading T_amb\n");
+  //printf("Reading T_amb\n");
   uint16_t T_amb;
   // buffers
   uint8_t inbuf[2];
@@ -255,26 +310,26 @@ uint16_t MLX90621::readTamb(){
 }
 // read EEPROM
 void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
-  printf("in readEEPROM\n");
+  //printf("in readEEPROM\n");
   // begin i2c interface
   initI2C();
   // read EEPROM table
   uint16_t i,j;
   // write address to begin reading at
-  printf("Setting Slave Address\n");
+  //printf("Setting Slave Address\n");
   // use EEPROM address
   if (ioctl(_I2C, I2C_SLAVE, EEPROM_ADDR) < 0){
     // could not set device as slave
     printf("Could not find device\n");
   }
   // recieve bytes and write into recieve buffer
-  printf("Reading Data\n");
+  //printf("Reading Data\n");
   dataBuf[0] = 0x00;
   if (write(_I2C, dataBuf, 1) != 1){
     // write failed
     printf("Write Failed\n");
   }
-  printf("Reading Data\n");
+  //printf("Reading Data\n");
   if (read(_I2C, dataBuf, EEPROM_SIZE) != EEPROM_SIZE){
     // read failed
     printf("Read Failed\n");

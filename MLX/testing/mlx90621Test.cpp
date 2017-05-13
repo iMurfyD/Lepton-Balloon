@@ -5,6 +5,7 @@ MLX90621 mlx;
 
 // databuffer for IR data
 int16_t dataBuf[64] ={};
+double calcData[64] = {};
 
 int main() {
   int i,j;
@@ -30,10 +31,16 @@ int main() {
 
   for(j=0;j<16;j++){
     for(i=0;i<4;i++){
-      printf("%.2f,\t",mlx.calcTo(dataBuf[j*4+1],j*4+i));
+      calcData[j*4+i]=mlx.calcTo(dataBuf[j*4+i],j*4+i);
+      printf("%.2f,\t",calcData[j*4+i]);
     }
     printf("\n");
   }
 
+  // output text file
+  char fileName[20];
+  sprintf(fileName,"MLXImage_%d.txt",0);
+  mlx.exportText(calcData,fileName);
+  printf("File Successfully written\n");
   return 0;
 }

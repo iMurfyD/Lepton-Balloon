@@ -5,7 +5,7 @@ import codecs
 WIDTH = 80
 HEIGHT = 60
 
-n = 0
+n = 2
 
 buf = []
 
@@ -26,7 +26,7 @@ buf = []
 #    buf.append(s.split(','))
 #print buf
 
-inFile = open('LeptonCImage0.txt', 'r')
+inFile = open('LeptonCImage2.txt', 'r')
 for i in range(0,HEIGHT):
     s = inFile.readline()
     buf.append(s.split(','))
