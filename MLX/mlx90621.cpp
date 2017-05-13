@@ -11,10 +11,9 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <math.h>
-#include <png.h>
-#include <malloc.h>
-#include <time.h>
+#include <png++/png.hpp>
 #include "mlx90621.h"
+
 
 /*
  * Initialization funtions
@@ -246,77 +245,18 @@ void MLX90621::exportPng(double dataBuf[64], char *fileName){
   for(i=0;i<MLXWIDTH*MLXHEIGHT;i++){
     buf[i]=uint16_t(dataBuf[i]*1000);
   }
-  const int width = MLXWIDTH;
-  const int height = MLXHEIGHT;
-  FILE* fp;
-  fp = fopen(fileName,"wb");
-  if (fp == NULL){
-    printf("Could not open PNG file");
-    return;
-  }
-  png_structp png_ptr = NULL;
-  png_infop info_ptr = NULL;
-  size_t x, y;
-  png_bytepp row_pointers;
-
-  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if (png_ptr == NULL) {
-    return ;
-  }
-
-  info_ptr = png_create_info_struct(png_ptr);
-  if (info_ptr == NULL) {
-    png_destroy_write_struct(&png_ptr, NULL);
-    return ;
-  }
-
-   if (setjmp(png_jmpbuf(png_ptr))) {
-    png_destroy_write_struct(&png_ptr, &info_ptr);
-    return ;
-  }
-
-  png_set_IHDR(png_ptr, info_ptr,
-               width, height, // width and height
-               16, // bit depth
-               PNG_COLOR_TYPE_GRAY, // color type
-               PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-  /* Initialize rows of PNG. */
-  row_pointers = (png_bytepp)png_malloc(png_ptr,
-    width*png_sizeof(png_bytep));
-  for (i=0; i<height; i++){
-   row_pointers[i]=NULL;
-  }
-
-  for (i=0; i<height; i++){
-   row_pointers[i]=png_malloc(png_ptr, width*2);
-   //row_pointers[i]=(png_bytep)png_malloc(png_ptr, width*2);
-  }
-
-  //set row data
-  short temp;
-  for (y = 0; y < height; ++y) {
-    png_bytep row = row_pointers[y];
-    for (x = 0; x < width; ++x) {
-      temp = buf[y*width+x];
-      *row++ = (png_byte)(temp >> 8);
-      *row++ = (png_byte)(temp & 0xFF);
+  // create image object
+  png::image< png::gray_pixel_16 > outImage(MLXWIDTH, MLXHEIGHT);
+  for (png::uint_32 y = 0; y < outImage.get_height(); ++y)
+  {
+    for (png::uint_32 x = 0; x < outImage.get_width(); ++x)
+    {
+    outImage[y][x] = png::gray_pixel_16(buf[y*MLXWIDTH+x]);
+    // non-checking equivalent of image.set_pixel(x, y, ...);
     }
   }
-
-  /* Actually write the image data. */
-  png_init_io(png_ptr, fp);
-  png_set_rows(png_ptr, info_ptr, row_pointers);
-  png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
-  //png_write_image(png_ptr, row_pointers);
-
-  /* Cleanup. */
-  for (y = 0; y < height; y++) {
-    png_free(png_ptr, row_pointers[y]);
-  }
-  png_free(png_ptr, row_pointers);
-  png_destroy_write_struct(&png_ptr, &info_ptr);
-  fclose(fp);
+  // output PNG
+  outImage.write(fileName);
 }
 
 /*
