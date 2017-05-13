@@ -9,6 +9,8 @@
 #define EEPROM_SIZE 256
 #define EEPROM_ADDR 0x50
 #define MLX_ADDR 0x60
+#define MLXWIDTH 4
+#define MLXHEIGHT 16
 
 class MLX90621 {
  public:
@@ -22,6 +24,8 @@ class MLX90621 {
   double calcTo(int16_t rawTemp, uint8_t loc);
   // export frame as text
   void exportText(double dataBuf[64], char *fileName);
+  // export frame as png
+  void exportPng(double dataBuf[64], char *fileName);
   // read EEPROM data
   void readEEPROM(uint8_t dataBuf[64]);
   // full frame read

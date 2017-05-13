@@ -3,12 +3,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#include <linux/types.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <math.h>
+#include <png.h>
+#include <malloc.h>
+#include <time.h>
 #include "mlx90621.h"
 
 /*
@@ -39,7 +44,7 @@ uint8_t MLX90621::init(void) {
   // wait 5ms
   usleep(5000);
   // read EEPROM table
-  printf("Reading EEPROM...\n");
+  //printf("Reading EEPROM...\n");
   readEEPROM(_EEPROM_Data);
   // only use configParam from EEPROM if no user supplied value.
   if (_configParam == 0){
@@ -205,7 +210,7 @@ double MLX90621::calcTo(int16_t rawTemp, uint8_t loc){
     */
 }
 /*
- * Data Interaction functions
+ *Output functions
 */
 // output frame as text file
 void MLX90621::exportText(double dataBuf[64], char *fileName){
@@ -232,9 +237,94 @@ void MLX90621::exportText(double dataBuf[64], char *fileName){
       printf("failed to close output file");
   return;
 }
+
+// output frame as text file
+void MLX90621::exportPng(double dataBuf[64], char *fileName){
+  int i = 0;
+  // convert double to uint16
+  uint16_t buf[MLXWIDTH*MLXHEIGHT];
+  for(i=0;i<MLXWIDTH*MLXHEIGHT;i++){
+    buf[i]=uint16_t(dataBuf[i]*1000);
+  }
+  const int width = MLXWIDTH;
+  const int height = MLXHEIGHT;
+  FILE* fp;
+  fp = fopen(fileName,"wb");
+  if (fp == NULL){
+    printf("Could not open PNG file");
+    return;
+  }
+  png_structp png_ptr = NULL;
+  png_infop info_ptr = NULL;
+  size_t x, y;
+  png_bytepp row_pointers;
+
+  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  if (png_ptr == NULL) {
+    return ;
+  }
+
+  info_ptr = png_create_info_struct(png_ptr);
+  if (info_ptr == NULL) {
+    png_destroy_write_struct(&png_ptr, NULL);
+    return ;
+  }
+
+   if (setjmp(png_jmpbuf(png_ptr))) {
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    return ;
+  }
+
+  png_set_IHDR(png_ptr, info_ptr,
+               width, height, // width and height
+               16, // bit depth
+               PNG_COLOR_TYPE_GRAY, // color type
+               PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+  /* Initialize rows of PNG. */
+  row_pointers = (png_bytepp)png_malloc(png_ptr,
+    width*png_sizeof(png_bytep));
+  for (i=0; i<height; i++){
+   row_pointers[i]=NULL;
+  }
+
+  for (i=0; i<height; i++){
+   row_pointers[i]=png_malloc(png_ptr, width*2);
+   //row_pointers[i]=(png_bytep)png_malloc(png_ptr, width*2);
+  }
+
+  //set row data
+  short temp;
+  for (y = 0; y < height; ++y) {
+    png_bytep row = row_pointers[y];
+    for (x = 0; x < width; ++x) {
+      temp = buf[y*width+x];
+      *row++ = (png_byte)(temp >> 8);
+      *row++ = (png_byte)(temp & 0xFF);
+    }
+  }
+
+  /* Actually write the image data. */
+  png_init_io(png_ptr, fp);
+  png_set_rows(png_ptr, info_ptr, row_pointers);
+  png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+  //png_write_image(png_ptr, row_pointers);
+
+  /* Cleanup. */
+  for (y = 0; y < height; y++) {
+    png_free(png_ptr, row_pointers[y]);
+  }
+  png_free(png_ptr, row_pointers);
+  png_destroy_write_struct(&png_ptr, &info_ptr);
+  fclose(fp);
+}
+
+/*
+ * Data Interaction functions
+*/
 // reads cold junction temp from MLX
 uint16_t MLX90621::readTamb(){
-  printf("Reading T_amb\n");
+  //printf("Reading T_amb\n");
   uint16_t T_amb;
   // buffers
   uint8_t inbuf[2];
@@ -280,26 +370,26 @@ uint16_t MLX90621::readTamb(){
 }
 // read EEPROM
 void MLX90621::readEEPROM(uint8_t dataBuf[EEPROM_SIZE]) {
-  printf("in readEEPROM\n");
+  //printf("in readEEPROM\n");
   // begin i2c interface
   initI2C();
   // read EEPROM table
   uint16_t i,j;
   // write address to begin reading at
-  printf("Setting Slave Address\n");
+  //printf("Setting Slave Address\n");
   // use EEPROM address
   if (ioctl(_I2C, I2C_SLAVE, EEPROM_ADDR) < 0){
     // could not set device as slave
     printf("Could not find device\n");
   }
   // recieve bytes and write into recieve buffer
-  printf("Reading Data\n");
+  //printf("Reading Data\n");
   dataBuf[0] = 0x00;
   if (write(_I2C, dataBuf, 1) != 1){
     // write failed
     printf("Write Failed\n");
   }
-  printf("Reading Data\n");
+  //printf("Reading Data\n");
   if (read(_I2C, dataBuf, EEPROM_SIZE) != EEPROM_SIZE){
     // read failed
     printf("Read Failed\n");
