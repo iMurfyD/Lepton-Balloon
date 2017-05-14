@@ -12,7 +12,7 @@
 #define ADDR 0x0F
 #define BUSYPIN 4
 #define RSTPIN 27
-#define CHUNK_SIZE 224
+#define CHUNK_SIZE 32
 
 int main(int argc, char **argv){
   uint8_t buf[CHUNK_SIZE];
