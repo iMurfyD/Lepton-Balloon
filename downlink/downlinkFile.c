@@ -8,6 +8,7 @@
 #include <linux/i2c.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <gpio.h>
 
 #define ADDR 0x0F
 #define BUSYPIN 4
