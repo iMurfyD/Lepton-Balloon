@@ -8,12 +8,12 @@
 #include <linux/i2c.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <gpio.h>
+#include "gpio.h"
 
 #define ADDR 0x0F
-#define BUSYPIN 4
-#define RSTPIN 27
-#define CHUNK_SIZE 32
+#define BUSYPIN 27
+#define RSTPIN 22
+#define CHUNK_SIZE 16
 
 int main(int argc, char **argv){
   uint8_t buf[CHUNK_SIZE];
@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     return 0;
   }
   // print file name for debugging
-  //printf ("inFilename = %s\n",inFilename);
+  printf ("inFilename = %s\n",inFilename);
 
   // open input file
   inFile = open(inFilename, O_RDONLY);
@@ -70,6 +70,15 @@ int main(int argc, char **argv){
     return 0;
   }
 
+  // get gpio
+  gpioExport(BUSYPIN);
+  gpioExport(RSTPIN);
+  // set direction
+  gpioDirection(BUSYPIN,GPIO_IN);
+  gpioDirection(RSTPIN,GPIO_OUT);
+  gpioSet(RSTPIN,1);
+  printf("Got GPIO\n");
+
   // set device address
   if (ioctl(I2C, I2C_SLAVE, ADDR) < 0){
     // could not set device as slave
@@ -79,13 +88,22 @@ int main(int argc, char **argv){
 
   // iterate through input file
   while(end<1){
+    //printf(".");
     nBytes = read(inFile, buf, CHUNK_SIZE);
     if(nBytes < CHUNK_SIZE){
       end = 1;
     }
+    // wait until arduino is no longer busy
+    while(gpioGet(BUSYPIN)){
+      usleep(10);
+    }
     write(I2C,buf,nBytes);
   }
+  //printf("\n");
 
+  // unregister gpios
+  gpioUnexport(BUSYPIN);
+  gpioUnexport(RSTPIN);
   // close i2c interface
   close(I2C);
   // close input file
