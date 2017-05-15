@@ -100,6 +100,8 @@ int main(int argc, char **argv){
     write(I2C,buf,nBytes);
   }
   //printf("\n");
+  // indicate EOF to arduino using read
+  read(I2C,buf,1);
 
   // unregister gpios
   gpioUnexport(BUSYPIN);
