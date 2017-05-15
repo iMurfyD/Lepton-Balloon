@@ -9,12 +9,12 @@ import os
 import time
 
 # bytes to read/transmit at once
-CHUNKSIZE = 32
+CHUNKSIZE = 16 
 PACKETSIZE = 224
 
 # busy flag pin
-BusyFlag = 4 # Broadcom pin 4
-ArdReset = 27 # arduino reset line 
+BusyFlag = 27 # Broadcom pin 4
+ArdReset = 22 # arduino reset line 
 
 # check number of arguments
 if len(sys.argv) != 2:
@@ -56,7 +56,8 @@ for chunk in iter(lambda: f.read(CHUNKSIZE), ''):
     # send out chunk over i2c
     try:
         bus.write_i2c_block_data(ADDRESS,len(chunk),chunk)
-        print chunk
+        #time.sleep(0.002);
+        #print chunk
     except IOError:
         print("failed to write to Arduino")
         # close I2C bus
