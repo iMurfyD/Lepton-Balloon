@@ -11,7 +11,7 @@
 #include "../downlink/gpio.h"
 
 #define ADDR 0x0F
-#define BUSYPIN 27
+#define BUSYPIN 4
 #define RSTPIN 22
 //#define CHUNK_SIZE 16
 #define BUFSIZE 1024
@@ -98,6 +98,10 @@ int main(int argc, char **argv){
   uint8_t newFile = 0;
   // iterate until EOF
   while(!newFile){
+   // wait until the data available flag is high
+   while(!gpioGet(BUSYPIN)){
+     usleep(100);
+   }
    // check available data
    command[0]= PEEK;
    write(I2C,command,1);
@@ -128,7 +132,7 @@ int main(int argc, char **argv){
      }
    }
    // prevent loop from becoming overly fast
-   usleep(5000);
+   usleep(15000);
   }
 
   // unregister gpios
