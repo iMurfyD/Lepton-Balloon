@@ -22,6 +22,7 @@ void intHandler(int dummy){
  
 int main( int argc, char **argv ) 
 {
+  signal(SIGINT,intHandler);
   int length, i = 0;
   char buffer[BUF_LEN];
   // allocate an inotify instance
