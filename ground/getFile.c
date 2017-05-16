@@ -13,7 +13,7 @@
 #define ADDR 0x0F
 #define BUSYPIN 4
 #define RSTPIN 22
-//#define CHUNK_SIZE 16
+#define CHUNKSIZE 16
 #define BUFSIZE 1024
 
 // commands
@@ -96,6 +96,7 @@ int main(int argc, char **argv){
   uint8_t dataBuf[BUFSIZE];
   uint16_t nBytes = 0;
   uint8_t newFile = 0;
+  uint16_t rxBytes;
   // iterate until EOF
   while(!newFile){
    // wait until the data available flag is high
@@ -109,14 +110,26 @@ int main(int argc, char **argv){
    nBytes = (data[0] << 8) | data[1];
    // if there is data
    if(nBytes>0){
-     printf("got %d bytes\n",nBytes);
+     printf("%d bytes available\n",nBytes);
+     // determine how many bytes to read
+     if(nBytes<CHUNKSIZE){
+       rxBytes=nBytes;
+     }
+     else{
+       rxBytes = CHUNKSIZE;
+     }
      // write read data command
      command[0] = READ;
-     command[1] = data[0];
-     command[2] = data[1];
+     command[1] = rxBytes >> 8;
+     command[2] = rxBytes & 0xFF;
      write(I2C,command,3);
      // read data
-     nBytes = read(I2C,dataBuf,nBytes);
+     nBytes = read(I2C,dataBuf,rxBytes);
+     int i;
+     for(i=0;i<nBytes;i++){
+       printf("%X,",dataBuf[i]);
+     }
+     printf("\n");
      // write data to file 
      write(outFile,dataBuf,nBytes);
    }
@@ -132,7 +145,7 @@ int main(int argc, char **argv){
      }
    }
    // prevent loop from becoming overly fast
-   usleep(15000);
+   //usleep(15000);
   }
 
   // unregister gpios
