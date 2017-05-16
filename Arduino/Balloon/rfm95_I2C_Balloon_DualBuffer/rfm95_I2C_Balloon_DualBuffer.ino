@@ -1,5 +1,7 @@
 // I2C Slave RFM96 Downlink
 
+#define debugPrint
+
 #include <SPI.h>
 #include <RH_RF95.h>
 #include <Wire.h>
@@ -90,7 +92,7 @@ void receiveHandler(int nBytes){
   // check if we are in the middle of a packet transfer
   if(writePos == 0){
     // check which buffer is full
-    if(fullBuf_0 && fullBuf_1){
+    if((fullBuf_0 == 1) && (fullBuf_1 == 1)){
       // cant write, don't read anything
       Serial.println("FULL");
       return;
