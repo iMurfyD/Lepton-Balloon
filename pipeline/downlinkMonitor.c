@@ -24,6 +24,7 @@ int main( int argc, char **argv )
 {
   signal(SIGINT,intHandler);
   int length, i = 0;
+  int j;
   char buffer[BUF_LEN];
   // allocate an inotify instance
   fd = inotify_init();
@@ -32,8 +33,7 @@ int main( int argc, char **argv )
     perror( "inotify_init" );
   }
   // initialize event watcher
-  wd = inotify_add_watch( fd, ".", 
-                         IN_MODIFY | IN_CREATE | IN_DELETE );
+  wd = inotify_add_watch( fd, ".",IN_CREATE);
   while(1){
     // blocks until event occurs
     length = read( fd, buffer, BUF_LEN );  
@@ -54,26 +54,19 @@ int main( int argc, char **argv )
           }
           else {
             printf( "The file %s was created.\n", event->name );
-          }
-        }
-        // if file was deleted
-        else if ( event->mask & IN_DELETE ) {
-          // check if file was directory
-          if ( event->mask & IN_ISDIR ) {
-            printf( "The directory %s was deleted.\n", event->name );       
-          }
-          else {
-            printf( "The file %s was deleted.\n", event->name );
-          }
-        }
-        // if file was modified
-        else if ( event->mask & IN_MODIFY ) {
-          // check if file was directory
-          if ( event->mask & IN_ISDIR ) {
-            printf( "The directory %s was modified.\n", event->name );
-          }
-          else {
-            printf( "The file %s was modified.\n", event->name );
+            j=0;
+            char temp = event->name[j];
+            // get length of string
+            while(temp != '\0'){
+              j++;
+              temp = event->name[j];
+            }
+            if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
+              printf("Valid file.\n");
+            }
+            else{
+              printf("Invalid.\n");
+            }
           }
         }
       }
