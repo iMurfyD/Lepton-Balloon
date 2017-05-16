@@ -11,13 +11,13 @@
 
 int main(){
   char inFilename[20];
-  char outFilename[20];
+  char outFilename[32];
   int inFile,outFile;
   int nFiles = 0;
   int i = 0;
   // create filenames
   snprintf(inFilename,20,"Gps.dat");
-  snprintf(outFilename,20,"Gps_%d.tmp",nFiles);
+  snprintf(outFilename,32,"../downlinkStaging/Gps_%d.tmp",nFiles);
   // open input file
   inFile = open(inFilename, O_RDONLY);
   if (inFile<0){
