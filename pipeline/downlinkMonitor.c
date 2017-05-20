@@ -27,7 +27,7 @@ int main( int argc, char **argv )
   int j;
   char buffer[BUF_LEN];
   FILE *fp;
-  char fragmentCommand[64];
+  char command[64];
   // allocate an inotify instance
   fd = inotify_init();
   // ensure inotify could be allocated
@@ -66,10 +66,20 @@ int main( int argc, char **argv )
             if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to fragment file
-              snprintf(fragmentCommand,64,"./fragment -i %s",event->name);
-              printf("%s\n",event->name);
+              snprintf(command,64,"./fragment -i %s",event->name);
+              printf("%s\n",command);
               // execute fragment command
-              fp = popen(fragmentCommand,"r");
+              fp = popen(command,"r");
+              // waits for command to finish before returning
+              pclose(fp);
+            }
+            else if(event->name[j-1]=='c' && event->name[j-2] == 'e' && event->name[j-3] == 'f' && event->name[j-4]=='.'){
+              printf("Valid file.\n");
+              // create command to downlink file
+              snprintf(command,64,"./downlink -i %s",event->name);
+              printf("%s\n",command);
+              // execute downlink command
+              fp = popen(command,"r");
               // waits for command to finish before returning
               pclose(fp);
             }

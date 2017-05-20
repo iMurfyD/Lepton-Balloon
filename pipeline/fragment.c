@@ -66,6 +66,11 @@ int main(int argc, char **argv){
   if(rFiles < 1){
     rFiles = 1;
   }
+  // create rm command
+  snprintf(command,64,"rm %s.*.fec",inFilename);
+  // call rm
+  fp = popen(command,"r");
+  pclose(fp);
   // create zfec command
   snprintf(command,64,"zfec -m %d -k %d %s",nFiles,rFiles,inFilename);
   // call zfec
