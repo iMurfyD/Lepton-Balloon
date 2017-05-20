@@ -26,6 +26,8 @@ int main( int argc, char **argv )
   int length, i = 0;
   int j;
   char buffer[BUF_LEN];
+  FILE *fp;
+  char fragmentCommand[64];
   // allocate an inotify instance
   fd = inotify_init();
   // ensure inotify could be allocated
@@ -63,6 +65,13 @@ int main( int argc, char **argv )
             }
             if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
               printf("Valid file.\n");
+              // create command to fragment file
+              snprintf(fragmentCommand,64,"./fragment -i %s",event->name);
+              printf("%s\n",event->name);
+              // execute fragment command
+              fp = popen(fragmentCommand,"r");
+              // waits for command to finish before returning
+              pclose(fp);
             }
             else{
               printf("Invalid.\n");
