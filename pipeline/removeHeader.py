@@ -14,18 +14,16 @@ import hashlib
 HEADERSIZE = 37
 
 # check number of arguments
-if len(sys.argv) != 3:
-    print("Expected input and output file")
+if len(sys.argv) != 2:
+    print("Expected only input file")
     sys.exit()
 
 # extract file name for syntactic clarity
 inFile = sys.argv[1]
-outFile = sys.argv[2]
 
 # open binary file
 try:
     inf = open(inFile,"rb")
-    of = open(outFile,"wb")
     fileSize = os.path.getsize(inFile)
     header = inf.read(HEADERSIZE)
 #    rawData = inf.read()
@@ -45,7 +43,6 @@ if nameLen < 5:
     print "Incorrect name length!"
     print nameLen
     inf.close()
-    of.close()
     sys.exit()
 
 # get file name
@@ -65,7 +62,6 @@ if nPacket < packetNum:
     print packetNum
     print nPacket
     inf.close()
-    of.close()
     sys.exit()
 
 # get file size
@@ -75,7 +71,6 @@ if fileSize_control != fileSize-HEADERSIZE-nameLen:
     print (fileSize - HEADERSIZE - nameLen)
     print fileSize_control
     inf.close()
-    of.close()
     sys.exit()
 
 # check file hash
@@ -87,10 +82,10 @@ if(fileHash != fileHash_control):
     print fileHash
     print fileHash_control
     inf.close()
-    of.close()
     sys.exit()
 
 # rewrite out file as infile - header
+of = open(fileName,"wb")
 of.write(rawData)
 
 # close files and exit
