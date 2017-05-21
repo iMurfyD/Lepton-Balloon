@@ -7,8 +7,10 @@ import time
 import hashlib
 
 # bytes to read/transmit at once
-CHUNKSIZE = 32
-PACKETSIZE = 224
+#CHUNKSIZE = 32
+#PACKETSIZE = 224
+# packNum, nPackets, FileSize, FileSize, Hash, fileNameSize
+# 1,       1,        1,        1,        32,   1
 HEADERSIZE = 37
 
 # check number of arguments
@@ -37,41 +39,49 @@ except IOError:
 # print header for debug purposes
 #print header
 
-# get number of packing zeros
-packNum = ord(header[4])
-packing = list(struct.unpack("b"*packNum,inf.read(packNum)))
-if packing != [0]*packNum:
-    print "Incorrect Packing!"
-    print packing
+# decode file name length
+nameLen = ord(header[36])
+if nameLen < 5:
+    print "Incorrect name length!"
+    print nameLen
     inf.close()
     of.close()
     sys.exit()
+
+# get file name
+fileName = inf.read(nameLen)
 
 # get remainder of file
 rawData = inf.read()
 fileHash = hashlib.md5(rawData).hexdigest()
 
-# decode control packet
-packetNum = (ord(header[0]) << 8) | ord(header[1])
-if packetNum != 0:
-    print "Incorrect Packet Number!"
+# get packet number
+packetNum = ord(header[0])
+
+# get number of packets
+nPacket = ord(header[1])
+if nPacket < packetNum:
+    print "Incorrect packet numbers!"
     print packetNum
+    print nPacket
     inf.close()
     of.close()
     sys.exit()
 
+# get file size
 fileSize_control = (ord(header[2]) << 8) | ord(header[3])
-if fileSize_control != fileSize-HEADERSIZE-packNum:
+if fileSize_control != fileSize-HEADERSIZE-nameLen:
     print "Incorrect File Size!"
-    print (fileSize - HEADERSIZE - packNum)
+    print (fileSize - HEADERSIZE - nameLen)
     print fileSize_control
     inf.close()
     of.close()
     sys.exit()
 
+# check file hash
 fileHash_control = ""
 for i in range(0,32):
-    fileHash_control += header[i+5]
+    fileHash_control += header[i+4]
 if(fileHash != fileHash_control):
     print "Incorrect Packet Hash!"
     print fileHash

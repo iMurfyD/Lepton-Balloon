@@ -51,7 +51,6 @@ elif(inFile[-7]=='_'):
 # [packNum,nPackets,FileSize,FileSize,Hash,fileNameSize,fileName]
 ctrlPacket = [packNum,nPackets,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
 ctrlPacket.extend(fileHashL)
-print(inFile)
 ctrlPacket.append(len(inFile))
 ctrlPacket.extend(inFile)
 print ctrlPacket
