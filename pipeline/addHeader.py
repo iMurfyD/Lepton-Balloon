@@ -22,8 +22,8 @@ try:
     fileSize = os.path.getsize(inFile)
     rawData = inf.read()
     fileHash = hashlib.md5(rawData).hexdigest()
-    print fileSize
-    print fileHash
+    #print fileSize
+    #print fileHash
 except IOError:
     print("Could not open file")
     sys.exit()
@@ -33,9 +33,23 @@ fileHashL = []
 for i in range(0,32):
     fileHashL.append(ord(fileHash[i]))
 
+# check if single digit file number
+if(inFile[-6] == '_'):
+    # single digit
+    # extract zfec file number
+    packNum = inFile[-7]
+    # extract maximum number of zfec files
+    nPackets = inFile[-5]
+elif(inFile[-7]=='_'):
+    # double digit
+    # extract zfec file number
+    packNum = int(inFile[-9:-7])
+    # extract maximum number of zfec files
+    nPackets = int(inFile[-6:-4])
+
 # create control packet
-# [packetNum,PacketNum,FileSize,FileSize,Hash]
-ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
+# [packNum,nPackets,FileSize,FileSize,Hash]
+ctrlPacket = [packNum,nPackets,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
 ctrlPacket.extend(fileHashL)
 print ctrlPacket
 
