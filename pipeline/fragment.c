@@ -80,4 +80,9 @@ int main(int argc, char **argv){
   //}
   // close fp (waits for zfec to finish)
   pclose(fp);
+  // create rm command
+  snprintf(command,64,"rm %s",inFilename);
+  // call rm
+  fp = popen(command,"r");
+  pclose(fp);
 }

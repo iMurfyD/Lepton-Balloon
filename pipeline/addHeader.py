@@ -5,6 +5,7 @@ import struct
 import os
 import time
 import hashlib
+import subprocess
 
 # check number of arguments
 if len(sys.argv) != 3:
@@ -59,7 +60,12 @@ print ctrlPacket
 of.write(bytearray(ctrlPacket))
 of.write(rawData)
 
-# close file smbus and exit
+# close files
 inf.close()
 of.close()
+
+# remove fec file
+subprocess.call(["rm",inFile])
+
+# exit
 sys.exit()

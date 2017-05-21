@@ -76,6 +76,16 @@ int main( int argc, char **argv )
             else if(event->name[j-1]=='c' && event->name[j-2] == 'e' && event->name[j-3] == 'f' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to downlink file
+              snprintf(command,64,"python addHeader.py %s %s.dwn",event->name,event->name);
+              printf("%s\n",command);
+              // execute downlink command
+              fp = popen(command,"r");
+              // waits for command to finish before returning
+              pclose(fp);
+            }
+            else if(event->name[j-1]=='n' && event->name[j-2] == 'w' && event->name[j-3] == 'd' && event->name[j-4]=='.'){
+              printf("Valid file.\n");
+              // create command to downlink file
               snprintf(command,64,"./downlink -i %s",event->name);
               printf("%s\n",command);
               // execute downlink command
