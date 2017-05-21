@@ -6,11 +6,6 @@ import os
 import time
 import hashlib
 
-# bytes to read/transmit at once
-CHUNKSIZE = 32
-PACKETSIZE = 224
-HEADERSIZE = 37
-
 # check number of arguments
 if len(sys.argv) != 3:
     print("Expected input and output file")
@@ -38,14 +33,10 @@ fileHashL = []
 for i in range(0,32):
     fileHashL.append(ord(fileHash[i]))
 
-# determine required number of padding bytes
-padNum = PACKETSIZE - ((fileSize+HEADERSIZE) % PACKETSIZE)
-
 # create control packet
-# [packetNum,PacketNum,FileSize,FileSize,padNum,Hash,padding]
-ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF),int(padNum)]
+# [packetNum,PacketNum,FileSize,FileSize,Hash]
+ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
 ctrlPacket.extend(fileHashL)
-ctrlPacket.extend([0]*padNum)
 print ctrlPacket
 
 # append control packet to beginning of file
