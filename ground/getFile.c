@@ -110,7 +110,7 @@ int main(int argc, char **argv){
    nBytes = (data[0] << 8) | data[1];
    // if there is data
    if(nBytes>0){
-     printf("%d bytes available\n",nBytes);
+     //printf("%d bytes available\n",nBytes);
      // determine how many bytes to read
      if(nBytes<CHUNKSIZE){
        rxBytes=nBytes;
@@ -125,11 +125,11 @@ int main(int argc, char **argv){
      write(I2C,command,3);
      // read data
      nBytes = read(I2C,dataBuf,rxBytes);
-     int i;
-     for(i=0;i<nBytes;i++){
-       printf("%X,",dataBuf[i]);
-     }
-     printf("\n");
+     //int i;
+     //for(i=0;i<nBytes;i++){
+     //  printf("%X,",dataBuf[i]);
+     //}
+     //printf("\n");
      // write data to file 
      write(outFile,dataBuf,nBytes);
    }
