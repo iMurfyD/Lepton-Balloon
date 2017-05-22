@@ -17,6 +17,7 @@ int main(int argc, char **argv){
   int index;
   int c;
   FILE *fp;
+  int useCp = 0;
 
   // parse args
 
@@ -63,8 +64,8 @@ int main(int argc, char **argv){
   }
   // decide how many files we need
   rFiles = nFiles*(1.0-REDUNDANCY);
-  if(rFiles < 1){
-    rFiles = 1;
+  if(rFiles < 2){
+    useCp = 1;
   }
   // create rm command
   snprintf(command,64,"rm %s.*.fec",inFilename);
@@ -72,7 +73,12 @@ int main(int argc, char **argv){
   fp = popen(command,"r");
   pclose(fp);
   // create zfec command
-  snprintf(command,64,"zfec -m %d -k %d %s",nFiles,rFiles,inFilename);
+  if(useCp){
+    snprintf(command,64,"cp %s %s.0_1.fec",inFilename,inFilename);
+  }
+  else{
+    snprintf(command,64,"zfec -m %d -k %d %s",nFiles,rFiles,inFilename);
+  }
   // call zfec
   fp = popen(command,"r");
   //if(fp<0){
