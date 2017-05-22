@@ -10,7 +10,7 @@
 #define MINFILES 2
 
 int main(int argc, char **argv){
-  int fileSize,nFiles,rFiles;
+  int fileSize,nFile,nFiles;
   char *inFilename = NULL;
   char command[64];
   char baseName[32];
@@ -61,24 +61,42 @@ int main(int argc, char **argv){
   if(baseName[i-2]=='_'){
     // single number
     baseName[i-4] = '\0';
+    // get current file number
+    nFile = baseName[i-3] - 48;
+    // get toal number of files
+    nFiles = baseName[i-1] - 48;
   }
   else if(baseName[i-3]=='_'){
     // double number
     baseName[i-6] = '\0';
+    // get current file number
+    nFile = baseName[i-5] + baseName[i-4]*10 - 48;
+    // get toal number of files
+    nFiles = baseName[i-2] + baseName[i-1]*10 - 48;
   }
-  // create zfec command
-  snprintf(command,64,"zunfec -o %s %s*",baseName,baseName);
-  printf("%s\n",command);
-  // call zfec
-  fp = popen(command,"r");
-  //if(fp<0){
-  //  perror("zfec failed");
-  //}
-  // close fp (waits for zfec to finish)
-  pclose(fp);
-  // create rm command
-  snprintf(command,64,"rm %s.*",baseName);
-  // call rm
-  fp = popen(command,"r");
-  pclose(fp);
+  // print numbers for debugging
+  printf("nFiles:%d nFile:%d \n",nFiles,nFile);
+  // check if it is time to recombine
+  if(nFiles - nFile < 2){
+    // create zfec command
+    if(nFiles < 2){
+      snprintf(command,64,"mv %s %s",inFilename,baseName);
+    }
+    else{
+      snprintf(command,64,"zunfec -o %s %s*",baseName,baseName);
+    }
+    printf("%s\n",command);
+    // call zfec
+    fp = popen(command,"r");
+    //if(fp<0){
+    //  perror("zfec failed");
+    //}
+    // close fp (waits for zfec to finish)
+    pclose(fp);
+    // create rm command
+    snprintf(command,64,"rm %s.*",baseName);
+    // call rm
+    fp = popen(command,"r");
+    pclose(fp);
+  }
 }

@@ -1,5 +1,0 @@
-this is a text file to attempt to characterize how messy the transmission of files using the downlinkFile.c and getFile.c interface is.
-Primarily I just need a largeish text file with a well defined structure. If this is mangled too badly to recognize I may have to transition to binary data.
-end
-of
-file
