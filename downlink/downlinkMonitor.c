@@ -92,6 +92,7 @@ int main( int argc, char **argv )
               fp = popen(command,"r");
               // waits for command to finish before returning
               pclose(fp);
+              usleep(400000);
             }
             else{
               printf("Invalid.\n");
