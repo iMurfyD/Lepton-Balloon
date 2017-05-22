@@ -15,6 +15,13 @@ int main(){
   FILE *fp;
   // register intHandler as sigint handler
   signal(SIGINT,intHandler);
+  // remove all .tmp files
+  // create command
+  snprintf(command,32,"rm -f *.tmp");
+  // execute rm
+  fp = popen(command,"r");
+  // wait
+  pclose(fp);
   // continuously monitor for files
   while(1){
     // create command
@@ -25,5 +32,7 @@ int main(){
     pclose(fp);
     // increment file counter
     i++;
+    // wait a bit
+    usleep(1000);
   }
 }
