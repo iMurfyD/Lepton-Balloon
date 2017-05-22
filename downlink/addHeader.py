@@ -5,11 +5,7 @@ import struct
 import os
 import time
 import hashlib
-
-# bytes to read/transmit at once
-CHUNKSIZE = 32
-PACKETSIZE = 224
-HEADERSIZE = 37
+import subprocess
 
 # check number of arguments
 if len(sys.argv) != 3:
@@ -27,8 +23,8 @@ try:
     fileSize = os.path.getsize(inFile)
     rawData = inf.read()
     fileHash = hashlib.md5(rawData).hexdigest()
-    print fileSize
-    print fileHash
+    #print fileSize
+    #print fileHash
 except IOError:
     print("Could not open file")
     sys.exit()
@@ -38,21 +34,38 @@ fileHashL = []
 for i in range(0,32):
     fileHashL.append(ord(fileHash[i]))
 
-# determine required number of padding bytes
-padNum = PACKETSIZE - ((fileSize+HEADERSIZE) % PACKETSIZE)
+# check if single digit file number
+if(inFile[-6] == '_'):
+    # single digit
+    # extract zfec file number
+    packNum = inFile[-7]
+    # extract maximum number of zfec files
+    nPackets = inFile[-5]
+elif(inFile[-7]=='_'):
+    # double digit
+    # extract zfec file number
+    packNum = int(inFile[-9:-7])
+    # extract maximum number of zfec files
+    nPackets = int(inFile[-6:-4])
 
 # create control packet
-# [packetNum,PacketNum,FileSize,FileSize,padNum,Hash,padding]
-ctrlPacket = [0,0,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF),int(padNum)]
+# [packNum,nPackets,FileSize,FileSize,Hash,fileNameSize,fileName]
+ctrlPacket = [packNum,nPackets,int((fileSize&0xFF00) >> 8),int(fileSize&0xFF)]
 ctrlPacket.extend(fileHashL)
-ctrlPacket.extend([0]*padNum)
+ctrlPacket.append(len(inFile))
+ctrlPacket.extend(inFile)
 print ctrlPacket
 
 # append control packet to beginning of file
 of.write(bytearray(ctrlPacket))
 of.write(rawData)
 
-# close file smbus and exit
+# close files
 inf.close()
 of.close()
+
+# remove fec file
+subprocess.call(["rm",inFile])
+
+# exit
 sys.exit()
