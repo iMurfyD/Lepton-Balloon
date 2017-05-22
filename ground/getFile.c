@@ -1,4 +1,4 @@
-// Transfers a binary file to arduino over I2C for downlink
+// Transfers a binary file from arduino over I2C
 
 #include <stdlib.h>
 #include <stdio.h>

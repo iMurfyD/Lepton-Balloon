@@ -68,10 +68,10 @@ int main( int argc, char **argv )
               // create command to remove header
               snprintf(command,128,"python removeHeader.py %s",event->name);
               printf("%s\n",command);
-              // execute fragment command
-              //fp = popen(command,"r");
+              // execute remove header command
+              fp = popen(command,"r");
               // waits for command to finish before returning
-              //pclose(fp);
+              pclose(fp);
             }
             else if(event->name[j-1]=='c' && event->name[j-2] == 'e' && event->name[j-3] == 'f' && event->name[j-4]=='.'){
               printf("Valid file.\n");
@@ -79,9 +79,9 @@ int main( int argc, char **argv )
               snprintf(command,128,"./unfragment -i %s",event->name);
               printf("%s\n",command);
               // execute downlink command
-              //fp = popen(command,"r");
+              fp = popen(command,"r");
               // waits for command to finish before returning
-              //pclose(fp);
+              pclose(fp);
             }
             else{
               printf("Invalid.\n");
