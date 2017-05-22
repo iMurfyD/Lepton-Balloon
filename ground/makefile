@@ -6,3 +6,6 @@ groundmonitor: groundMonitor.c
 
 unfragment: unfragment.c
 	gcc unfragment.c -o unfragment
+
+filepoll: filePoll.c
+	gcc filePoll.c -o filepoll -g

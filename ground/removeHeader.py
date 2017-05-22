@@ -36,6 +36,11 @@ except IOError:
 
 # print header for debug purposes
 #print header
+# check length of header
+if len(header) < HEADERSIZE:
+    print "file too short!"
+    inf.close()
+    sys.exit()
 
 # decode file name length
 nameLen = ord(header[36])
