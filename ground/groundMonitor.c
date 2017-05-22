@@ -35,7 +35,7 @@ int main( int argc, char **argv )
     perror( "inotify_init" );
   }
   // initialize event watcher
-  wd = inotify_add_watch( fd, ".",IN_CREATE|IN_MODIFY);
+  wd = inotify_add_watch( fd, ".",IN_CREATE|IN_CLOSE_WRITE);
   while(1){
     // blocks until event occurs
     length = read( fd, buffer, BUF_LEN );  
@@ -79,7 +79,7 @@ int main( int argc, char **argv )
           }
         }
         // if file was modified
-        else if (event->mask & IN_MODIFY){
+        else if (event->mask & IN_CLOSE_WRITE){
           // check if file was directory
           if ( event->mask & IN_ISDIR ) {
             printf( "The directory %s was modified.\n", event->name );       
