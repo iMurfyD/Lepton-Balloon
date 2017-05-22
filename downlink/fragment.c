@@ -67,17 +67,28 @@ int main(int argc, char **argv){
   if(rFiles < 2){
     useCp = 1;
   }
+  // get base file name
+  char baseName[32];
+  int i = 0;
+  //printf("%s\n",inFilename);
+  while(inFilename[i] != '\0'){
+    baseName[i] = inFilename[i];
+    //printf("%c",inFilename[i]);
+    i++;
+  }
+  baseName[i-4] = '\0';
+  //printf("Base Name: %s\n",baseName);
   // create rm command
-  snprintf(command,64,"rm %s.*.fec",inFilename);
+  snprintf(command,64,"rm %s.*.fec",baseName);
   // call rm
   fp = popen(command,"r");
   pclose(fp);
   // create zfec command
   if(useCp){
-    snprintf(command,64,"cp %s %s.0_1.fec",inFilename,inFilename);
+    snprintf(command,64,"cp %s %s.0_1.fec",inFilename,baseName);
   }
   else{
-    snprintf(command,64,"zfec -m %d -k %d %s",nFiles,rFiles,inFilename);
+    snprintf(command,64,"zfec -m %d -k %d -p %s %s",nFiles,rFiles,baseName,inFilename);
   }
   // call zfec
   fp = popen(command,"r");
