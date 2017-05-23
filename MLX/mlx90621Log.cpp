@@ -21,7 +21,8 @@ int main() {
   MLX90621 mlx;
   // initialize sensor
   mlx.init();
-  for(k=1;k<10;k++){
+  //for(k=1;k<10;k++){
+  while(1){
     // get ambient temp and perform calculation
     uint16_t T_amb_r = mlx.readTamb();
     double T_amb = mlx.calcTa(T_amb_r);
@@ -34,7 +35,7 @@ int main() {
       }
     }
     // print image number
-    printf("image %d\n",k);
+    printf("image\n");
     for(i = 0;i<16;i++){
       for(j=0;j<4;j++){
         //printf("%0.2f,",calcData[4*i+j]);
