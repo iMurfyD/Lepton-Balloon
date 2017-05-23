@@ -179,7 +179,7 @@ while 1:
         except IOError:
             print "Uh oh..."
         # concatenate data into string
-        data = str(pressure) + ','  + str(cTemp) + '\n'
+        data = time.strftime("%H:%M:%S") + ',' +  str(round(pressure,3)) + ','  + str(cTemp) + '\n'
         # Output data to logfile 
         logFile.write(data)
         # close logfile
