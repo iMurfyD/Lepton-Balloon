@@ -24,6 +24,8 @@ int main(int argc, char **argv){
   int c;
   int nBytes;
   int end = 0;
+  FILE *fp;
+  char command[64];
 
   opterr = 0;
   // parse arguments
@@ -110,4 +112,9 @@ int main(int argc, char **argv){
   close(I2C);
   // close input file
   close(inFile);
+  // remove input file
+  snprintf(command,64,"rm %s",inFilename);
+  // call rm
+  fp = popen(command,"r");
+  pclose(fp);
 }
