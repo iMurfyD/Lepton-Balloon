@@ -55,11 +55,14 @@ while 1:
             #print msg.altitude
             #print msg.timestamp
             # concatenate into string
-            data = msg.timestamp.strftime("%H:%M:%S") + ',' + str(msg.lat) + ',' + str(msg.lon) + ',' + str(msg.altitude) + '\n'
-            # write data to file
-            logFile.write(data)
-            # close logfile
-            logFile.close()
+            if(msg is None):
+                data = msg.timestamp.strftime("%H:%M:%S") + ',' + str(msg.lat) + ',' + str(msg.lon) + ',' + str(msg.altitude) + '\n'
+                # write data to file
+                logFile.write(data)
+                # close logfile
+                logFile.close()
+            else:
+                print "No Fix"
     except(KeyboardInterrupt):
         logFile.close()
         ser.close()
