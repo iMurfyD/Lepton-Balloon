@@ -1,6 +1,13 @@
 #include "mlx90621.cpp"
+#include <signal.h>
+
+void intHandler(int dummy){
+  printf("Exiting...\n");
+  exit(0);
+}
 
 int main() {
+  signal(SIGINT,intHandler);
   int i,j,k;
   char fileName[20];
   // databuffer for IR data
@@ -24,12 +31,20 @@ int main() {
     }
     // print image number
     printf("image %d\n",k);
+    for(i = 0;i<16;i++){
+      for(j=0;j<4;j++){
+        //printf("%0.2f,",calcData[4*i+j]);
+      }
+      //printf("\n");
+    }
     // output text file
-    sprintf(fileName,"MLXImage_%d.txt",k);
-    mlx.exportText(calcData,fileName);
+    //sprintf(fileName,"MLXImage_%d.txt",k);
+    //mlx.exportText(calcData,fileName);
     // output png file
     sprintf(fileName,"MLXImage_%d.png",k);
     mlx.exportPng(calcData,fileName);
+    // wait a bit
+    usleep(1000000L);
   }
   return 0;
 }
