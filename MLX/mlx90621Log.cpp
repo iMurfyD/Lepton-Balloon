@@ -1,5 +1,7 @@
 #include "mlx90621.cpp"
 #include <signal.h>
+#include <stdio.h>
+#include <time.h>
 
 void intHandler(int dummy){
   printf("Exiting...\n");
@@ -9,7 +11,9 @@ void intHandler(int dummy){
 int main() {
   signal(SIGINT,intHandler);
   int i,j,k;
-  char fileName[20];
+  char fileName[32];
+  time_t rawtime;
+  struct tm *timeinfo;
   // databuffer for IR data
   double calcData[64] = {};
   int16_t dataBuf[64] ={};
@@ -40,8 +44,12 @@ int main() {
     // output text file
     //sprintf(fileName,"MLXImage_%d.txt",k);
     //mlx.exportText(calcData,fileName);
+    // get time
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
     // output png file
-    sprintf(fileName,"MLXImage_%d.png",k);
+    //sprintf(fileName,"MLXImage_%d.png",k);
+    snprintf(fileName,32,"%d.%d.%d_MLX.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
     mlx.exportPng(calcData,fileName);
     // wait a bit
     usleep(1000000L);
