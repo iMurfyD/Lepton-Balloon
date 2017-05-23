@@ -45,60 +45,57 @@ int main(){
     int i = 0;
     int n = 0;
     int ret = -1;
-    char fileName[80];
+    char fileName[32];
     // SPI settings
     int bits = 8;
     int mode = SPI_CPHA|SPI_CPOL;
     int speed = 20000000;
+    // time
+    struct tm *timeinfo;
+    time_t rawtime;
 
     // initialize array to zero
     for(i=0;i<nBytes;i++){
         buff[i]=0;
     }
-    // open spi port
-    int fd = open("/dev/spidev0.0",O_RDWR);
-    // check if spi port is actually open
-    if(fd<0)
-        pabort("can't open port");
-    // initialize spi port
-    ret = initSPI(fd,mode,bits,speed);
-    if (ret == -1)
-        pabort("error configuring SPI");
-    // sync to lepton and get first packet
-    //uint8_t packet[PACKET_LEN];
-    uint8_t *packet;
-    packet = leptonSync(fd);
-    // get the rest of the first frame
-    //uint8_t frameBuffer[PACKET_LEN*FRAME_PACKETS];
-    uint8_t *frameBuffer;
-    frameBuffer = getFrame(fd,packet);
-    // export frame as text
-    sprintf(fileName,"LeptonCImage%d.txt",n);
-    exportText(frameBuffer,fileName);
-    // pack frame
-    uint16_t *pngBuf;
-    pngBuf = pack(frameBuffer);
-    printf("Packed Succesfully!");
-    // export frame as png
-    sprintf(fileName,"LeptonCImage%d.png",n);
-    save_png(fileName,LEP_WIDTH,LEP_HEIGHT,pngBuf);
-    // main loop
-    while(n<nFrames){
-        n++;
-        // get frame first packet without resyncing
-        packet = pollPacket(fd);
-        // get remaining packets in frame 
+    while(1){
+        // open spi port
+        int fd = open("/dev/spidev0.0",O_RDWR);
+        // check if spi port is actually open
+        if(fd<0)
+            pabort("can't open port");
+        // initialize spi port
+        ret = initSPI(fd,mode,bits,speed);
+        if (ret == -1)
+            pabort("error configuring SPI");
+        // sync to lepton and get first packet
+        //uint8_t packet[PACKET_LEN];
+        uint8_t *packet;
+        packet = leptonSync(fd);
+        // get the rest of the first frame
+        //uint8_t frameBuffer[PACKET_LEN*FRAME_PACKETS];
+        uint8_t *frameBuffer;
         frameBuffer = getFrame(fd,packet);
         // export frame as text
-        sprintf(fileName,"LeptonCImage%d.txt",n);
-        exportText(frameBuffer,fileName);
-        printf("butts");
+        //sprintf(fileName,"LeptonCImage%d.txt",n);
+        //exportText(frameBuffer,fileName);
+        // pack frame
+        uint16_t *pngBuf;
+        pngBuf = pack(frameBuffer);
+        printf("Packed Succesfully!\n");
+        // get current time
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+        // export frame as png
+        snprintf(fileName,32,"%d.%d.%d_lep.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+        save_png(fileName,LEP_WIDTH,LEP_HEIGHT,pngBuf);
+        // close spi bus
+        ret = close(fd);
+        if(ret != 0)
+            pabort("Could not close spi port");
+        // wait a bit
+        usleep(1000000);
     }
-    // close spi bus
-    ret = close(fd);
-    if(ret != 0)
-        pabort("Could not close spi port");
-    return 0;
 }
 
 uint8_t* leptonSync(int fd){
