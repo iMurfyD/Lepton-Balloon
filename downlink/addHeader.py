@@ -47,6 +47,12 @@ elif(inFile[-7]=='_'):
     packNum = int(inFile[-9:-7])
     # extract maximum number of zfec files
     nPackets = int(inFile[-6:-4])
+elif(inFile[-8]=='_'):
+    # triple digit
+    # extract zfec file number
+    packNum = int(inFile[-11:-8])
+    # extract maximum number of zfec files
+    nPackets = int(inFile[-7:-4])
 
 # create control packet
 # [packNum,nPackets,FileSize,FileSize,Hash,fileNameSize,fileName]
