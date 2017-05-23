@@ -58,11 +58,13 @@ if (not 'quality' in locals()):
 while 1:
     try:
         # get filename
-        fileName = datetime.datetime.now().time().strftime("%d-%m-%y_%H:%M:%S")
-        fileName = name + '_' + str(fileName) + ".jpg"
+        fileName = datetime.datetime.now().time().strftime("%H.%M.%S")
+        fileName = str(fileName) + '_' + name + ".jpg"
         print fileName
         # capture image from pycam
         subprocess.call("./capture.sh")
+        # crop image before compressing
+        subprocess.call(["./crop.sh","tempCapture.jpg","tempCapture.jpg"])
         # compress image from pycam
         subprocess.call(["./compress.sh","tempCapture.jpg",fileName,str(quality)])
         # remove temp file
