@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # modified code from controleverything.com
 # Avery Bodenstein
 
@@ -9,7 +10,7 @@ convTime = 0.02
 
 # read config file
 try:
-    cfgFile = open("ms5637.cfg",'r')
+    cfgFile = open("/home/avery/GitRepos/Lepton-Balloon/ms5637/ms5637.cfg",'r')
     for line in cfgFile:
         if line[0:9] == "MS5637Log":
             log = line[10:-1]

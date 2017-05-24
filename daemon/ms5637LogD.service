@@ -1,0 +1,10 @@
+[Unit]
+Description=ms5637Log
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/ms5637/ms5637_Log.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
