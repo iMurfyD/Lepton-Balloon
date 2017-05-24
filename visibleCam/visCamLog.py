@@ -62,18 +62,18 @@ while 1:
         fileName = str(fileName) + '_' + name + ".jpg"
         print fileName
         # capture image from pycam
-        subprocess.call("./capture.sh")
+        subprocess.call("/home/avery/GitRepos/Lepton-Balloon/visibleCam/capture.sh")
         # crop image before compressing
-        subprocess.call(["./crop.sh","tempCapture.jpg","tempCapture.jpg"])
+        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/crop.sh","/balloonLogs/tempCapture.jpg","/balloonLogs/tempCapture.jpg"])
         # compress image from pycam
-        subprocess.call(["./compress.sh","tempCapture.jpg",fileName,str(quality)])
+        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/compress.sh","/balloonLogs/tempCapture.jpg",fileName,str(quality)])
         # remove temp file
-        subprocess.call(["rm","tempCapture.jpg"])
-        # delay 1 second
-        time.sleep(0.25)
+        subprocess.call(["rm","/balloonLogs/tempCapture.jpg"])
+        # delay
+        #time.sleep(0.25)
         
     except KeyboardInterrupt:
         # remove temp file
-        subprocess.call(["rm","tempCapture.jpg"])
+        subprocess.call(["rm","/balloonLogs/tempCapture.jpg"])
         sys.exit()
 
