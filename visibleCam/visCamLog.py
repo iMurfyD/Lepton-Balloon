@@ -57,6 +57,9 @@ if (not 'quality' in locals()):
 
 while 1:
     try:
+        # wait for 10s round edge
+        while not datetime.datetime.now().second % 10 is 0:
+            time.sleep(0.5);
         # get filename
         fileName = "/balloonLogs/" + datetime.datetime.now().time().strftime("%H.%M.%S")
         fileName = str(fileName) + '_' + name + ".jpg"
