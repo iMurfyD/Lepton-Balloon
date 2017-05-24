@@ -48,12 +48,19 @@ int main() {
     // get time
     time(&rawtime);
     timeinfo = localtime(&rawtime);
+    // wait until 10s mark
+    while(timeinfo->tm_sec % 10 !=0){
+      // get time
+      time(&rawtime);
+      timeinfo = localtime(&rawtime);
+      usleep(500000);
+    }
     // output png file
     //sprintf(fileName,"MLXImage_%d.png",k);
     snprintf(fileName,64,"/balloonLogs/%d.%d.%d_MLX.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
     mlx.exportPng(calcData,fileName);
     // wait a bit
-    usleep(1000000L);
+    sleep(7);
   }
   return 0;
 }
