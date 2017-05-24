@@ -1,0 +1,9 @@
+[Unit]
+Description=balloonInit
+
+[Service]
+Type=oneshot
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/MLX/enableCombined.sh
+
+[Install]
+WantedBy=multi-user.target
