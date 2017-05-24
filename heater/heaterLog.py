@@ -13,7 +13,7 @@ hystOn = 0
 
 # read config file
 try:
-    cfgFile = open("heater.cfg",'r')
+    cfgFile = open("/home/avery/GitRepos/Lepton-Balloon/heater/heater.cfg",'r')
     for line in cfgFile:
         if line[0:9] == "HeaterLog":
             log = line[10:-1]
