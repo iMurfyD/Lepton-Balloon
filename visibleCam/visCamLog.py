@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import sys
 import time
@@ -11,7 +11,7 @@ compressDelay = 4.5
 
 # read config file
 try:
-    cfgFile = open("visCam.cfg","r")
+    cfgFile = open("/home/avery/GitRepos/Lepton-Balloon/visibleCam/visCam.cfg","r")
     for line in cfgFile:
         #print line[0:13]
         if line[0:10] == "VisCamName":
@@ -58,7 +58,7 @@ if (not 'quality' in locals()):
 while 1:
     try:
         # get filename
-        fileName = datetime.datetime.now().time().strftime("%H.%M.%S")
+        fileName = "/balloonLogs/" + datetime.datetime.now().time().strftime("%H.%M.%S")
         fileName = str(fileName) + '_' + name + ".jpg"
         print fileName
         # capture image from pycam
