@@ -1,0 +1,10 @@
+[Unit]
+Description=visCamLog
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/visibleCam/visCamLog.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

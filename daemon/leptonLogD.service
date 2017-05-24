@@ -1,0 +1,10 @@
+[Unit]
+Description=leptonLog
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/lepton/leptonlog
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

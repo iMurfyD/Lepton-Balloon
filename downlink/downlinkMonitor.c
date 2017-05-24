@@ -27,7 +27,9 @@ int main( int argc, char **argv )
   int j;
   char buffer[BUF_LEN];
   FILE *fp;
-  char command[128];
+  char command[256];
+  char basePath[64];
+  snprintf(basePath,64,"/home/avery/GitRepos/Lepton-Balloon/downlink");
   // allocate an inotify instance
   fd = inotify_init();
   // ensure inotify could be allocated
@@ -35,7 +37,7 @@ int main( int argc, char **argv )
     perror( "inotify_init" );
   }
   // initialize event watcher
-  wd = inotify_add_watch( fd, ".",IN_CREATE);
+  wd = inotify_add_watch( fd, "/downlinkStaging",IN_CREATE);
   while(1){
     // blocks until event occurs
     length = read( fd, buffer, BUF_LEN );  
@@ -66,7 +68,7 @@ int main( int argc, char **argv )
             if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to fragment file
-              snprintf(command,128,"./fragment -i %s",event->name);
+              snprintf(command,256,"%s/fragment -i %s",basePath,event->name);
               printf("%s\n",command);
               // execute fragment command
               fp = popen(command,"r");
@@ -76,7 +78,7 @@ int main( int argc, char **argv )
             else if(event->name[j-1]=='c' && event->name[j-2] == 'e' && event->name[j-3] == 'f' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to downlink file
-              snprintf(command,128,"python addHeader.py %s %s.dwn",event->name,event->name);
+              snprintf(command,256,"python %s/addHeader.py /downlinkStaging/%s /downlinkStaging/%s.dwn",basePath,event->name,event->name);
               printf("%s\n",command);
               // execute downlink command
               fp = popen(command,"r");
@@ -86,7 +88,7 @@ int main( int argc, char **argv )
             else if(event->name[j-1]=='n' && event->name[j-2] == 'w' && event->name[j-3] == 'd' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to downlink file
-              snprintf(command,128,"./downlink -i %s",event->name);
+              snprintf(command,256,"%s/downlink -i /downlinkStaging/%s",basePath,event->name);
               printf("%s\n",command);
               // execute downlink command
               fp = popen(command,"r");

@@ -11,7 +11,7 @@ void intHandler(int dummy){
 int main() {
   signal(SIGINT,intHandler);
   int i,j,k;
-  char fileName[32];
+  char fileName[64];
   time_t rawtime;
   struct tm *timeinfo;
   // databuffer for IR data
@@ -50,7 +50,7 @@ int main() {
     timeinfo = localtime(&rawtime);
     // output png file
     //sprintf(fileName,"MLXImage_%d.png",k);
-    snprintf(fileName,32,"%d.%d.%d_MLX.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+    snprintf(fileName,64,"/balloonLogs/%d.%d.%d_MLX.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
     mlx.exportPng(calcData,fileName);
     // wait a bit
     usleep(1000000L);

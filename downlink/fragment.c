@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glob.h>
 
 #define MAXFILESIZE 1000
 #define REDUNDANCY 0.2
@@ -12,12 +13,15 @@
 int main(int argc, char **argv){
   int fileSize,nFiles,rFiles;
   char *inFilename = NULL;
-  char command[64];
+  char command[128];
   int inFile;
   int index;
   int c;
   FILE *fp;
   int useCp = 0;
+  int ret = 0;
+  char pattern[32];
+  glob_t globbuf;
 
   // parse args
 
@@ -78,17 +82,24 @@ int main(int argc, char **argv){
   }
   baseName[i-4] = '\0';
   //printf("Base Name: %s\n",baseName);
-  // create rm command
-  snprintf(command,64,"rm %s.*.fec",baseName);
-  // call rm
-  fp = popen(command,"r");
-  pclose(fp);
+  // check if there are already fec files
+  snprintf(command,128,"/downlinkStaging/%s.*.fec",baseName);
+  globbuf.gl_offs = 1;
+  ret = glob(command,GLOB_DOOFFS,NULL,&globbuf);
+  // if there are files remove them
+  if(ret != GLOB_NOMATCH){
+    // create rm command
+    snprintf(command,128,"rm /downlinkStaging/%s.*.fec",baseName);
+    // call rm
+    fp = popen(command,"r");
+    pclose(fp);
+  }
   // create zfec command
   if(useCp){
-    snprintf(command,64,"cp %s %s.0_1.fec",inFilename,baseName);
+    snprintf(command,128,"cp /downlinkStaging/%s /downlinkStaging/%s.0_1.fec",inFilename,baseName);
   }
   else{
-    snprintf(command,64,"zfec -m %d -k %d -p %s %s",nFiles,rFiles,baseName,inFilename);
+    snprintf(command,128,"zfec -m %d -k %d -p %s /downlinkStaging/%s",nFiles,rFiles,baseName,inFilename);
   }
   // call zfec
   fp = popen(command,"r");
@@ -98,7 +109,7 @@ int main(int argc, char **argv){
   // close fp (waits for zfec to finish)
   pclose(fp);
   // create rm command
-  snprintf(command,64,"rm %s",inFilename);
+  snprintf(command,128,"rm /downlinkStaging/%s",inFilename);
   // call rm
   fp = popen(command,"r");
   pclose(fp);

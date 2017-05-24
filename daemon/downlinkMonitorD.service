@@ -1,0 +1,10 @@
+[Unit]
+Description=downlinkMonitor
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/downlink/downlinkmonitor
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
