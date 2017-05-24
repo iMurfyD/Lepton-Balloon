@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 import pynmea2
 import serial
 import sys
@@ -7,7 +7,7 @@ ser = serial.Serial('/dev/ttyAMA0',9600)
 
 # read config file
 try:
-    cfgFile = open("gps.cfg","r")
+    cfgFile = open("/home/avery/GitRepos/Lepton-Balloon/gps/gps.cfg","r")
     for line in cfgFile:
         #print line[0:13]
         if line[0:13] == "GpsPrimaryLog":
@@ -55,7 +55,7 @@ while 1:
             #print msg.altitude
             #print msg.timestamp
             # concatenate into string
-            if(msg is None):
+            if(not msg.timestamp is None):
                 data = msg.timestamp.strftime("%H:%M:%S") + ',' + str(msg.lat) + ',' + str(msg.lon) + ',' + str(msg.altitude) + '\n'
                 # write data to file
                 logFile.write(data)
