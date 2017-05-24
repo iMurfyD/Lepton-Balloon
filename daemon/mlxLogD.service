@@ -1,0 +1,10 @@
+[Unit]
+Description=MLXLog
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/MLX/mlx90621Log
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
