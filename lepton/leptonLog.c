@@ -45,7 +45,7 @@ int main(){
     int i = 0;
     int n = 0;
     int ret = -1;
-    char fileName[32];
+    char fileName[64];
     // SPI settings
     int bits = 8;
     int mode = SPI_CPHA|SPI_CPOL;
@@ -87,7 +87,7 @@ int main(){
         time(&rawtime);
         timeinfo = localtime(&rawtime);
         // export frame as png
-        snprintf(fileName,32,"%d.%d.%d_lep.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+        snprintf(fileName,64,"/balloonLogs/%d.%d.%d_lep.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
         save_png(fileName,LEP_WIDTH,LEP_HEIGHT,pngBuf);
         // close spi bus
         ret = close(fd);
