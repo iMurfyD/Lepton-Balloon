@@ -86,6 +86,12 @@ int main(){
         // get current time
         time(&rawtime);
         timeinfo = localtime(&rawtime);
+        while(timeinfo->tm_sec % 10 != 0){
+          usleep(500000);
+          // get current time
+          time(&rawtime);
+          timeinfo = localtime(&rawtime);
+        }
         // export frame as png
         snprintf(fileName,64,"/balloonLogs/%d.%d.%d_lep.png",timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
         save_png(fileName,LEP_WIDTH,LEP_HEIGHT,pngBuf);
@@ -94,7 +100,7 @@ int main(){
         if(ret != 0)
             pabort("Could not close spi port");
         // wait a bit
-        usleep(1000000);
+        sleep(7);
     }
 }
 
