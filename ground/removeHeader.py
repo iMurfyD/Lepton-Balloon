@@ -92,6 +92,7 @@ if(fileHash != fileHash_control):
 # rewrite out file as infile - header
 of = open(fileName,"wb")
 of.write(rawData)
+print("Created file: %s",fileName)
 
 # close files and exit
 inf.close()

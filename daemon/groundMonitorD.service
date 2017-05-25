@@ -3,7 +3,7 @@ Description=groundMonitor
 
 [Service]
 Type=simple
-ExecStart=/home/avery/GitRepos/Lepton-Balloon/ground/groundmonitor
+ExecStart=/home/pi/GitRepos/Lepton-Balloon/ground/groundmonitor
 Restart=on-failure
 
 [Install]

@@ -35,7 +35,7 @@ int main( int argc, char **argv )
     perror( "inotify_init" );
   }
   // initialize event watcher
-  wd = inotify_add_watch( fd, ".",IN_CREATE|IN_CLOSE_WRITE);
+  wd = inotify_add_watch( fd, "/downlinkStaging",IN_CREATE|IN_CLOSE_WRITE);
   while(1){
     // blocks until event occurs
     length = read( fd, buffer, BUF_LEN );  
@@ -66,7 +66,7 @@ int main( int argc, char **argv )
             if(event->name[j-1]=='c' && event->name[j-2] == 'e' && event->name[j-3] == 'f' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to defragment file
-              snprintf(command,128,"./unfragment -i %s",event->name);
+              snprintf(command,128,"/home/pi/GitRepos/Lepton-Balloon/ground/unfragment -i /downlinkStaging/%s",event->name);
               printf("%s\n",command);
               // execute downlink command
               fp = popen(command,"r");
@@ -96,7 +96,7 @@ int main( int argc, char **argv )
             if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to remove header
-              snprintf(command,128,"python removeHeader.py %s",event->name);
+              snprintf(command,128,"python /home/pi/GitRepos/Lepton-Balloon/ground/removeHeader.py /downlinkStaging/%s",event->name);
               printf("%s\n",command);
               // execute remove header command
               fp = popen(command,"r");

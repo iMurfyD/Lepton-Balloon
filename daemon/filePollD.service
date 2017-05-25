@@ -3,7 +3,7 @@ Description=filePoll
 
 [Service]
 Type=simple
-ExecStart=/home/avery/GitRepos/Lepton-Balloon/ground/filepoll
+ExecStart=/home/pi/GitRepos/Lepton-Balloon/ground/filepoll
 Restart=on-failure
 
 [Install]
