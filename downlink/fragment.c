@@ -83,23 +83,23 @@ int main(int argc, char **argv){
   baseName[i-4] = '\0';
   //printf("Base Name: %s\n",baseName);
   // check if there are already fec files
-  snprintf(command,128,"/downlinkStaging/%s.*.fec",baseName);
+  snprintf(command,128,"%s.*.fec",baseName);
   globbuf.gl_offs = 1;
   ret = glob(command,GLOB_DOOFFS,NULL,&globbuf);
   // if there are files remove them
   if(ret != GLOB_NOMATCH){
     // create rm command
-    snprintf(command,128,"rm /downlinkStaging/%s.*.fec",baseName);
+    snprintf(command,128,"rm %s.*.fec",baseName);
     // call rm
     fp = popen(command,"r");
     pclose(fp);
   }
   // create zfec command
-  if(useCp){
-    snprintf(command,128,"cp /downlinkStaging/%s /downlinkStaging/%s.0_1.fec",inFilename,baseName);
+  if(useCp == 1){
+    snprintf(command,128,"cp %s %s.0_1.fec",inFilename,baseName);
   }
   else{
-    snprintf(command,128,"zfec -m %d -k %d -p %s /downlinkStaging/%s",nFiles,rFiles,baseName,inFilename);
+    snprintf(command,128,"zfec -m %d -k %d -p %s %s",nFiles,rFiles,baseName,inFilename);
   }
   // call zfec
   fp = popen(command,"r");
@@ -109,7 +109,7 @@ int main(int argc, char **argv){
   // close fp (waits for zfec to finish)
   pclose(fp);
   // create rm command
-  snprintf(command,128,"rm /downlinkStaging/%s",inFilename);
+  snprintf(command,128,"rm %s",inFilename);
   // call rm
   fp = popen(command,"r");
   pclose(fp);

@@ -1,9 +1,9 @@
 [Unit]
-Description=visCamLog
+Description=groundMonitor
 
 [Service]
 Type=simple
-ExecStart=/home/avery/GitRepos/Lepton-Balloon/visibleCam/visCamLog.py
+ExecStart=/home/pi/GitRepos/Lepton-Balloon/ground/groundmonitor
 Restart=on-failure
 
 [Install]

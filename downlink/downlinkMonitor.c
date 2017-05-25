@@ -68,7 +68,7 @@ int main( int argc, char **argv )
             if(event->name[j-1]=='p' && event->name[j-2] == 'm' && event->name[j-3] == 't' && event->name[j-4]=='.'){
               printf("Valid file.\n");
               // create command to fragment file
-              snprintf(command,256,"%s/fragment -i %s",basePath,event->name);
+              snprintf(command,256,"%s/fragment -i /downlinkStaging/%s",basePath,event->name);
               printf("%s\n",command);
               // execute fragment command
               fp = popen(command,"r");

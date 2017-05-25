@@ -12,8 +12,8 @@
 int main(int argc, char **argv){
   int fileSize,nFile,nFiles;
   char *inFilename = NULL;
-  char command[64];
-  char baseName[32];
+  char command[128];
+  char baseName[64];
   int inFile;
   int index;
   int c;
@@ -80,10 +80,10 @@ int main(int argc, char **argv){
   if(nFiles - nFile < 2){
     // create zfec command
     if(nFiles < 2){
-      snprintf(command,64,"mv %s %s",inFilename,baseName);
+      snprintf(command,128,"mv %s %s",inFilename,baseName);
     }
     else{
-      snprintf(command,64,"zunfec -o %s %s*",baseName,baseName);
+      snprintf(command,128,"zunfec -o %s %s*",baseName,baseName);
     }
     printf("%s\n",command);
     // call zfec
@@ -94,7 +94,7 @@ int main(int argc, char **argv){
     // close fp (waits for zfec to finish)
     pclose(fp);
     // create rm command
-    snprintf(command,64,"rm %s.*",baseName);
+    snprintf(command,128,"rm %s.*",baseName);
     // call rm
     fp = popen(command,"r");
     pclose(fp);

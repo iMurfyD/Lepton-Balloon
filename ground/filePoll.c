@@ -10,14 +10,14 @@ void intHandler(int dummy){
 }
 
 int main(){
-  char command[32];
+  char command[128];
   int i = 0;
   FILE *fp;
   // register intHandler as sigint handler
   signal(SIGINT,intHandler);
   // remove all .tmp files
   // create command
-  snprintf(command,32,"rm -f *.tmp");
+  snprintf(command,64,"rm -f /downlinkStaging/*.tmp");
   // execute rm
   fp = popen(command,"r");
   // wait
@@ -25,7 +25,7 @@ int main(){
   // continuously monitor for files
   while(1){
     // create command
-    snprintf(command,32,"./getfile -o %d.tmp",i);
+    snprintf(command,128,"/home/pi/GitRepos/Lepton-Balloon/ground/getfile -o /downlinkStaging/%d.tmp",i);
     // execute getFile
     fp = popen(command,"r");
     // wait for file
