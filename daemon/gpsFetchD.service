@@ -1,0 +1,10 @@
+[Unit]
+Description=gpsFetch
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/gps/gpsfetch
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
