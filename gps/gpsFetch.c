@@ -21,42 +21,42 @@ int main(){
   signal(SIGINT,intHandler);
   char inFilename[32];
   char outFilename[32];
+  char dataBuf[NLINES*BYTES_LINE];
   int inFile,outFile;
   int nFiles = 0;
   int i = 0;
+  int emptyLog = 0;
   while(1){
     // create filenames
     snprintf(inFilename,32,"/balloonLogs/Gps.dat");
-    snprintf(outFilename,32,"/downlinkStaging/Gps_%d.tmp",nFiles);
+    snprintf(outFilename,32,"/downlinkStaging/Gps.tmp");
     // open input file
     inFile = open(inFilename, O_RDONLY);
     if (inFile<0){
       printf("Failed to open input file\n");
       return -1;
     }
-    // open input file
-    outFile = open(outFilename,O_WRONLY|O_CREAT|O_TRUNC);
-    if (outFile<0){
-      printf("Failed to open output file\n");
-      close(inFile);
-      return -1;
-    }
-    // seek to end of file
+    // seek to end of file - ammount to read
     lseek(inFile,-NLINES*BYTES_LINE,SEEK_END);
-    // read last NLINES lines of gps data file and log
-    char temp = NULL;
-    for(i=0;i<NLINES;i++){
-      printf("%d\n",i);
-      while((temp != '\n')&&(read(inFile,&temp,1)>0)){
-        write(outFile,&temp,1);
+    // try to read NLINES lines of gps data
+    if(read(inFile,&dataBuf,NLINES*BYTES_LINE) == NLINES*BYTES_LINE){
+      // open output file
+      outFile = open(outFilename,O_WRONLY|O_CREAT|O_TRUNC);
+      if (outFile<0){
+        printf("Failed to open output file\n");
+        close(inFile);
+        return -1;
       }
-      temp = ' ';
+      // write data to output file
+      write(outFile,&dataBuf,NLINES*BYTES_LINE);
+      // close output file
+      close(outFile);
     }
-    // close files
+    else{
+      printf("Empty File\n");
+    }
+    // close infile
     close(inFile);
-    close(outFile);
-    // increment file number
-    nFiles++;
     // wait a bit
     sleep(16);
   }
