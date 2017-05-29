@@ -52,13 +52,13 @@ while 1:
         fileName = fileName[13:]
         print fileName
         # crop image before compressing
-        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/crop.sh","/balloonLogs/"+fileName,"/downlinkStaging/"+fileName])
+        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/crop.sh","/balloonLogs/"+fileName,"/balloonLogs/"+fileName+".tmp"])
         print "Cropped"
         # compress image
-        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/compress.sh","/downlinkStaging/"+fileName,"/downlinkStaging/"+fileName+".tmp",str(quality)])
+        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/compress.sh","/balloonLogs/"+fileName+".tmp","/downlinkStaging/"+fileName+".tmp",str(quality)])
         print "Compressed"
         # remove temp file
-        subprocess.call(["rm","/downlinkStaging/"+fileName])
+        subprocess.call(["rm","/balloonLogs/"+fileName+".tmp"])
         print "removed"
         # delay
         time.sleep(delay)
