@@ -51,19 +51,26 @@ while 1:
         fileName = max(glob.iglob('/balloonLogs/*.jpg'), key=os.path.getctime)
         fileName = fileName[13:]
         print fileName
-        mlxName = fileName[:-6]+"MLX.png"
-        lepName = fileName[:-6]+"lep.png"
+        baseName = max(glob.iglob('/balloonLogs/*.png'), key=os.path.getctime)
+        baseName = baseName[13:]
+        mlxName = baseName[:-7]+"MLX.png"
+        lepName = baseName[:-7]+"lep.png"
+        print lepName
+        print mlxName
+        # move MLX and Lep images
+        subprocess.call(["cp","/balloonLogs/"+mlxName,"/downlinkStaging/" + mlxName + ".tmp"])
+        subprocess.call(["cp","/balloonLogs/"+lepName,"/downlinkStaging/" + lepName + ".tmp"])
         # crop image before compressing
         subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/crop.sh","/balloonLogs/"+fileName,"/balloonLogs/"+fileName+".tmp"])
         print "Cropped"
-        # now that the image has been cropped the MLX and Lepton images should be there
-        subprocess.call(["cp","/balloonLogs/"+mlxName,"/downlinkStaging/" + mlxName + ".tmp"])
-        subprocess.call(["cp","/balloonLogs/"+lepName,"/downlinkStaging/" + lepName + ".tmp"])
         # compress image
-        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/compress.sh","/balloonLogs/"+fileName+".tmp","/downlinkStaging/"+fileName+".tmp",str(quality)])
+        subprocess.call(["/home/avery/GitRepos/Lepton-Balloon/visibleCam/compress.sh","/balloonLogs/"+fileName+".tmp","/balloonLogs/"+fileName+".cmp",str(quality)])
         print "Compressed"
+        # move image to downlink folder
+        subprocess.call(["cp","/balloonLogs/"+fileName+".cmp","/downlinkStaging/" + fileName + ".tmp"])
         # remove temp file
         subprocess.call(["rm","/balloonLogs/"+fileName+".tmp"])
+        subprocess.call(["rm","/balloonLogs/"+fileName+".cmp"])
         print "removed"
         # delay
         time.sleep(delay)
