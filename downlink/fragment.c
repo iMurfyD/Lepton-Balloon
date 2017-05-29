@@ -17,6 +17,8 @@ int main(int argc, char **argv){
   int inFile;
   int index;
   int c;
+  char baseName[64];
+  int i = 0;
   FILE *fp;
   int useCp = 0;
   int ret = 0;
@@ -72,8 +74,6 @@ int main(int argc, char **argv){
     useCp = 1;
   }
   // get base file name
-  char baseName[32];
-  int i = 0;
   //printf("%s\n",inFilename);
   while(inFilename[i] != '\0'){
     baseName[i] = inFilename[i];

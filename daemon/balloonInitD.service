@@ -6,6 +6,7 @@ Type=oneshot
 ExecStart=/home/avery/GitRepos/Lepton-Balloon/MLX/enableCombined.sh
 ExecStart=/home/avery/GitRepos/Lepton-Balloon/daemon/startLog.sh
 ExecStart=/home/avery/GitRepos/Lepton-Balloon/daemon/startDownlink.sh
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/daemon/startFetch.sh
 
 [Install]
 WantedBy=multi-user.target

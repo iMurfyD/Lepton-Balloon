@@ -1,0 +1,10 @@
+[Unit]
+Description=visCamFetch
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/visibleCam/visCamFetch.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

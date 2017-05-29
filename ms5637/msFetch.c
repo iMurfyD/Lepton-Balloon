@@ -9,7 +9,7 @@
 
 // number of GPS data lines to conglomerate
 #define NLINES 16
-#define BYTES_LINE 38
+#define BYTES_LINE 23
 
 // interrupt handler
 void intHandler(int dummy){
@@ -29,8 +29,8 @@ int main(){
   int emptyLog = 0;
   while(1){
     // create filenames
-    snprintf(inFilename,32,"/balloonLogs/Gps.dat");
-    snprintf(outFilename,32,"/downlinkStaging/Gps_%d.tmp",k);
+    snprintf(inFilename,32,"/balloonLogs/MS5637.dat");
+    snprintf(outFilename,32,"/downlinkStaging/MS5637_%d.tmp",k);
     // open input file
     inFile = open(inFilename, O_RDONLY);
     if (inFile<0){
@@ -60,5 +60,6 @@ int main(){
     close(inFile);
     // wait a bit
     sleep(16);
+    k++;
   }
 }

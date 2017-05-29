@@ -1,0 +1,10 @@
+[Unit]
+Description=ms5637Fetch
+
+[Service]
+Type=simple
+ExecStart=/home/avery/GitRepos/Lepton-Balloon/ms5637/msfetch
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
