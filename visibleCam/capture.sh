@@ -1,3 +1,3 @@
 #!/bin/bash
 
-raspistill -o /balloonLogs/tempCapture.jpg --timeout 1 --nopreview --exposure sports
+raspistill -o $1 --timeout 1 --nopreview --exposure sports
