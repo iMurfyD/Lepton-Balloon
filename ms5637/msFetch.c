@@ -20,7 +20,7 @@ void intHandler(int dummy){
 int main(){
   signal(SIGINT,intHandler);
   char inFilename[32];
-  char outFilename[32];
+  char outFilename[64];
   char dataBuf[NLINES*BYTES_LINE];
   int inFile,outFile;
   int nFiles = 0;
@@ -30,7 +30,7 @@ int main(){
   while(1){
     // create filenames
     snprintf(inFilename,32,"/balloonLogs/MS5637.dat");
-    snprintf(outFilename,32,"/downlinkStaging/MS5637_%d.tmp",k);
+    snprintf(outFilename,64,"/downlinkStaging/MS5637_%d.tmp",k);
     // open input file
     inFile = open(inFilename, O_RDONLY);
     if (inFile<0){
