@@ -57,6 +57,8 @@ int main(int argc, char **argv){
     baseName[i] = inFilename[i];
     i++;
   }
+  baseName[i]='\0';
+  printf("baseName: %s\n",baseName);
   // remove numbering
   if(baseName[i-2]=='_'){
     // single number
@@ -70,10 +72,11 @@ int main(int argc, char **argv){
     // double number
     baseName[i-6] = '\0';
     // get current file number
-    nFile = baseName[i-5] + baseName[i-4]*10 - 48;
+    nFile = baseName[i-5]*10 + baseName[i-4] - 480 - 48;
     // get toal number of files
-    nFiles = baseName[i-2] + baseName[i-1]*10 - 48;
+    nFiles = baseName[i-2]*10 + baseName[i-1] - 480 -48;
   }
+  printf("baseName: %s\n",baseName);
   // print numbers for debugging
   printf("nFiles:%d nFile:%d \n",nFiles,nFile);
   // check if it is time to recombine

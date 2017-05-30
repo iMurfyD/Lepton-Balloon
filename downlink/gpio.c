@@ -12,7 +12,9 @@ int gpioGet(int gpio){
   uint8_t val[1];
   snprintf(buf,64,"/sys/class/gpio/gpio%d/value", gpio);
   fd = open(buf, O_RDONLY);
-  if(-1==fd) printf("Failed to open gpio value\r\n");
+  if(-1==fd){
+    printf("Failed to open gpio %d\r\n",gpio);
+  }
   read(fd,val,1);
   close(fd);
   if(val[0] == 49)
