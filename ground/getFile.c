@@ -9,10 +9,11 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include "../downlink/gpio.h"
+#include <time.h>
 
 #define ADDR 0x0F
 #define BUSYPIN 4
-#define RSTPIN 22
+//#define RSTPIN 22
 #define CHUNKSIZE 16
 #define BUFSIZE 1024
 
@@ -20,6 +21,9 @@
 #define READ 0
 #define PEEK 1
 #define CHECKEOF 2
+
+// functions
+long timediff(clock_t t1, clock_t t2);
 
 int main(int argc, char **argv){
   //uint8_t buf[CHUNK_SIZE];
@@ -29,6 +33,7 @@ int main(int argc, char **argv){
   int index;
   int c;
   int end = 0;
+  clock_t t1,t2;
 
   opterr = 0;
   // parse arguments
@@ -77,11 +82,11 @@ int main(int argc, char **argv){
 
   // get gpio
   gpioExport(BUSYPIN);
-  gpioExport(RSTPIN);
+  //gpioExport(RSTPIN);
   // set direction
   gpioDirection(BUSYPIN,GPIO_IN);
-  gpioDirection(RSTPIN,GPIO_OUT);
-  gpioSet(RSTPIN,1);
+  //gpioDirection(RSTPIN,GPIO_OUT);
+  //gpioSet(RSTPIN,1);
   printf("Got GPIO\n");
 
   // set device address
@@ -97,15 +102,45 @@ int main(int argc, char **argv){
   uint16_t nBytes = 0;
   uint8_t newFile = 0;
   uint16_t rxBytes;
+  long diff;
   // iterate until EOF
   while(!newFile){
    // wait until the data available flag is high
    while(!gpioGet(BUSYPIN)){
-     usleep(100);
+     t1 = clock();
+     usleep(10);
+     t1 = clock();
+     diff = timediff(t1,t2);
+     if(diff > 100){
+       printf("WARNING, EXCESSIVE SERVICE TIME!");
+       return -1;
+     }
+     /*
+     // check if EOF
+     command[0] = CHECKEOF;
+     write(I2C,command,1);
+     read(I2C,data,1);
+     if(data[0]==1){
+       // raise EOF flag
+       newFile = 1;
+       printf("New File!\n");
+       break;
+     }
+     */
    }
+   //if(newFile){
+   //  break;
+   //}
    // check available data
    command[0]= PEEK;
-   write(I2C,command,1);
+   if(write(I2C,command,1)!=1){
+     printf("Write to Arduino Failed.\n");
+     return -1;
+   }
+   // do nothing for a bit...
+   volatile int i = 0;
+   for(i=0;i++;i<100){
+   }
    read(I2C,data,2);
    nBytes = (data[0] << 8) | data[1];
    // if there is data
@@ -150,9 +185,15 @@ int main(int argc, char **argv){
 
   // unregister gpios
   gpioUnexport(BUSYPIN);
-  gpioUnexport(RSTPIN);
+  //gpioUnexport(RSTPIN);
   // close i2c interface
   close(I2C);
   // close input file
   close(outFile);
+}
+
+long timediff(clock_t t1, clock_t t2) {
+    long elapsed;
+    elapsed = ((double)t2 - t1) / CLOCKS_PER_SEC * 1000;
+    return elapsed;
 }
