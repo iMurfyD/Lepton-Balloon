@@ -30,11 +30,7 @@ UBNL_RF95::UBNL_RF95(uint8_t slaveSelectPin, uint8_t bootDelay, uint8_t maxSpiCl
     spiWrite(UBNL_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0);
     spiWrite(UBNL_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0);
 
-    // Now put into standby mode to do the rest of the config
-    // RH did this, so maybe there's a good reason?
-    resp = spiWrite(UBNL_RF95_REG_01_OP_MODE,UBNL_RF95_MODE_STDBY);
-    delay(10); // Let shenanigans happens
-    Serial.println(resp);
+    goIntoStandbyMode();
 
     // Set Modem config
     // Values taken from RH library
@@ -92,6 +88,53 @@ UBNL_RF95::UBNL_RF95(uint8_t slaveSelectPin, uint8_t bootDelay, uint8_t maxSpiCl
     spiWrite(UBNL_RF95_REG_09_PA_CONFIG, UBNL_RF95_PA_SELECT | (txPwr-5));
 }
 
+// Keeps calling delay until the radio says that's gucci to transmit
+// TODO Finish this thing
+void UBNL_RF95::waitUntilSingle() {
+    bool theygotaboi = true;
+    while (theygotaboi) {
+        // Check if that blew up
+
+        // If it did, snoop in for the kill
+
+        // Otherwise wait a bit
+        delay(10);
+    }
+    return;
+}
+
+// Puts radio into standby mode
+void UBNL_RF95::goIntoStandbyMode () {
+    // Now put into standby mode to do the rest of the config
+    // RH did this, so maybe there's a good reason?
+    uint8_t resp = spiWrite(UBNL_RF95_REG_01_OP_MODE,UBNL_RF95_MODE_STDBY);
+    delay(10); // Let shenanigans happens
+    Serial.println(resp);
+    return;
+}
+
+bool UBNL_RF95::send(const uint8_t* data, uint8_t len) {
+    if (len > UBNL_RF95_FIFO_SIZE) {
+        return false; // You dummy
+    }
+
+    // Wait until it's done sending packets
+    // This function just keeps calling delay until the radio stops tx'ing
+    waitUntilSingle();
+
+    goIntoStandbyMode();
+
+    // Position at the beginning of the FIFO
+    spiWrite(UBNL_RF95_REG_0D_FIFO_ADDR_PTR, 0);
+
+    // Send the headers with spiWrite
+    // TODO figure out what the headers should be
+
+    // Message
+    spiBurstWrite(UBNL_RF95_REG_0D_FIFO_ADDR_PTR, data, len);
+    spiWrite(UBNL_RF95_REG_22_PAYLOAD_LENGTH, len+UBNL_RF95_HEADER_LEN);
+}
+
 // Writes one byte to a register
 // Does not handle setting this whole shebang up
 // With the exception of handling the ss lines
@@ -116,6 +159,21 @@ uint8_t UBNL_RF95::spiRead(uint8_t reg) {
     return '9';
     // I'm not sure if I need this function, so rn it's completely not
     // written. Wubba lubba dub dub
+}
+
+
+// Returns the last value of the written shenanigans
+uint8_t UBNL_RF95::spiBurstWrite(uint8_t reg, const uint8_t* val, uint8_t len) {
+    uint8_t ret;
+    digitalWrite(_ssPin, LOW);
+    SPI.beginTransaction(_spiSettings);
+    SPI.transfer(reg); // Send the address
+    for (int i = 0; i<len; i++)
+        ret = SPI.transfer(val); // Send the value
+    delay(UBNL_RF95_SPI_DELAY); // No idea how long this going to take to write
+    SPI.endTransaction();
+    digitalWrite(_ssPin, HIGH);
+    return ret;
 }
 
 uint8_t UBNL_RF95::spiWriteModemConfig(uint8_t m1, uint8_t m2, uint8_t m3) {

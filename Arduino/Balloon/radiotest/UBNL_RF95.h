@@ -189,7 +189,9 @@
 // Misc not included above but included from RadioHead
 #define UBNL_RF95_FXOSC 32000000.0
 #define UBNL_RF95_FSTEP (UBNL_RF95_FXOSC / 524288)
-#define UBNL_TX_Power
+// TODO fill in with the actual header Length
+// This goes in tandem with figuring out the header in the send func
+#define UBNL_RF95_HEADER_LEN 32
 
 // Defined by moi
 #define UBNL_RF95_SPI_DELAY 2 // in ms, will delay after each SPI write
@@ -201,11 +203,15 @@ const uint16_t preamble_length = 8;
 class UBNL_RF95 {
 public:
     UBNL_RF95(uint8_t slaveSelectPin, uint8_t bootDelay, uint8_t maxSpiClkSpeed, uint8_t txPwr);
+    bool send(const uint8_t* data, uint8_t len);
 
 private:
     uint8_t _ssPin;
     uint8_t spiWriteModemConfig(uint8_t m1, uint8_t m2, uint8_t m3);
     SPISettings _spiSettings;
     uint8_t spiWrite(uint8_t reg, uint8_t val);
+    uint8_t spiBurstWrite(uint8_t reg, const uint8_t* val, uint8_t len);
     uint8_t spiRead(uint8_t register);
+    void waitUntilSingle();
+    void goIntoStandbyMode();
 };
