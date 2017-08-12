@@ -89,29 +89,39 @@ UBNL_RF95::UBNL_RF95(uint8_t slaveSelectPin, uint8_t bootDelay, uint8_t maxSpiCl
 }
 
 // Keeps calling delay until the radio says that's gucci to transmit
-// TODO Finish this thing
-void UBNL_RF95::waitUntilSingle() {
+uint8_t UBNL_RF95::waitUntilSingle() {
     bool theygotaboi = true;
     while (theygotaboi) {
         // Check if that blew up
-
-        // If it did, snoop in for the kill
-
-        // Otherwise wait a bit
-        delay(10);
+        // Read 4th bit in byte
+        if(spiRead(UBNL_RF95_REG_12_IRQ_FLAGS) & 0b00010000)
+            theygotaboi = true;
+        else
+            delay(3);
     }
     return;
 }
 
 // Puts radio into standby mode
-void UBNL_RF95::goIntoStandbyMode () {
+uint8_t UBNL_RF95::goIntoStandbyMode () {
     // Now put into standby mode to do the rest of the config
     // RH did this, so maybe there's a good reason?
     uint8_t resp = spiWrite(UBNL_RF95_REG_01_OP_MODE,UBNL_RF95_MODE_STDBY);
-    delay(10); // Let shenanigans happens
+    delay(UBNL_RF95_MODE_DELAY); // Let shenanigans happens
     Serial.println(resp);
-    return;
+    return resp;
 }
+
+// Puts radio into standby mode
+uint8_t UBNL_RF95::goIntoTxMode () {
+    // Now put into standby mode to do the rest of the config
+    // RH did this, so maybe there's a good reason?
+    uint8_t resp = spiWrite(UBNL_RF95_REG_01_OP_MODE,UBNL_RF95_MODE_TX);
+    delay(UBNL_RF95_MODE_DELAY); // Let shenanigans happens
+    Serial.println(resp);
+    return resp;
+}
+
 
 bool UBNL_RF95::send(const uint8_t* data, uint8_t len) {
     if (len > UBNL_RF95_FIFO_SIZE) {
@@ -133,6 +143,11 @@ bool UBNL_RF95::send(const uint8_t* data, uint8_t len) {
     // Message
     spiBurstWrite(UBNL_RF95_REG_0D_FIFO_ADDR_PTR, data, len);
     spiWrite(UBNL_RF95_REG_22_PAYLOAD_LENGTH, len+UBNL_RF95_HEADER_LEN);
+
+    // Goes into TX mode where the packet is tx'ed (budoy)
+    // Will automatically go back into standby upon completion
+    // Can not write to regiters while in Tx mode
+    goIntoTxMode();
 }
 
 // Writes one byte to a register
@@ -156,9 +171,13 @@ uint8_t UBNL_RF95::spiWrite(uint8_t reg, uint8_t val) {
 // Similarly does not set the whole schebang up
 // With the exception of handling the ss lines
 uint8_t UBNL_RF95::spiRead(uint8_t reg) {
-    return '9';
-    // I'm not sure if I need this function, so rn it's completely not
-    // written. Wubba lubba dub dub
+    // Wubba lubba dub dub
+    uint8_t val;
+    digitalWrite(_ssPin, LOW);
+    SPI.transfer(reg & ~UBNL_SPI_WRITE_MASK); // Send the address with the write mask off
+    val = SPI.transfer(0); // The written value is ignored, reg value is read
+    digitalWrite(_ssPin, HIGH);
+    return val;
 }
 
 

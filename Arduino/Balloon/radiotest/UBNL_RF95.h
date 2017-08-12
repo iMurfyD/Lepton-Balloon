@@ -189,12 +189,16 @@
 // Misc not included above but included from RadioHead
 #define UBNL_RF95_FXOSC 32000000.0
 #define UBNL_RF95_FSTEP (UBNL_RF95_FXOSC / 524288)
+// This is the bit in the SPI address that marks it as a write
+#define UBNL_SPI_WRITE_MASK 0x80
+
 // TODO fill in with the actual header Length
 // This goes in tandem with figuring out the header in the send func
 #define UBNL_RF95_HEADER_LEN 32
 
 // Defined by moi
 #define UBNL_RF95_SPI_DELAY 2 // in ms, will delay after each SPI write
+#define UBNL_RF95_MODE_DELAY 10
 #define UBNL_RF95_FREQ 434.0 // center frequency
 
 // Length of preamble in LoRA packets
@@ -212,6 +216,7 @@ private:
     uint8_t spiWrite(uint8_t reg, uint8_t val);
     uint8_t spiBurstWrite(uint8_t reg, const uint8_t* val, uint8_t len);
     uint8_t spiRead(uint8_t register);
-    void waitUntilSingle();
-    void goIntoStandbyMode();
+    uint8_t waitUntilSingle();
+    uint8_t goIntoStandbyMode();
+    uint8_t goIntoTxMode();
 };
