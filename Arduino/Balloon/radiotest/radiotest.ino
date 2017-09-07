@@ -1,4 +1,5 @@
 #include "UBNL_RF95.h"
+#include <string.h>
 
 const int SS_HOPE_RF95 = 0; // SS line to choose the HopeRF 95 radio
 const int BOOT_DELAY = 100; // ms to wait for radio to boot up
@@ -14,5 +15,8 @@ void setup() {
 
 void loop() {
   char* thing_to_tx = "hfahjfahjjahjdjjkljkdsafdsajkjfdkljfdkjkldafjfadjkladsfl;jkdfi";
-  
+  if(radio->send(thing_to_tx, strlen(thing_to_tx)))
+    Serial.println("It probably worked");
+  else
+    Serial.println("It probably didn't work");
 }
